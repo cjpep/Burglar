@@ -12,4 +12,5 @@ return {
     pack_effects = true,
     timer_alerts = true,
     diagnostics = false,
+    spectator_enabled = true, -- Experimental delayed read-only board viewer.
 }

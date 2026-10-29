@@ -1,5 +1,5 @@
 local mod = SMODS.current_mod
--- Burglar logo, displayed only on Draftout's private Royale lobby page.
+-- Burglar logo, displayed only on Burglar's private Royale lobby page.
 SMODS.Atlas({
     key = 'burglar_lobby',
     path = 'burglar_lobby.png',
@@ -16,16 +16,16 @@ SMODS.Atlas({
     py = 9,
     disable_mipmap = true,
 })
-local live_overlay = assert(SMODS.load_file('draftout/overlay.lua',mod.id))()
-local mod_icon = assert(SMODS.load_file('draftout/mod_icon.lua',mod.id))()
+local live_overlay = assert(SMODS.load_file('burglar/overlay.lua',mod.id))()
+local mod_icon = assert(SMODS.load_file('burglar/mod_icon.lua',mod.id))()
 if MPAPI and MPAPI.on_loaded then MPAPI.on_loaded(mod_icon.install) else mod_icon.install() end
-local core = assert(SMODS.load_file("draftout/core.lua", mod.id))()
-local vanilla_keys = assert(SMODS.load_file("draftout/vanilla_keys.lua", mod.id))()
-local atlas_compat = assert(SMODS.load_file("draftout/atlas_compat.lua", mod.id))()
-local fresh_seed = assert(SMODS.load_file("draftout/seed.lua", mod.id))()
-local deck_cycle = assert(SMODS.load_file('draftout/deck_cycle_compat.lua', mod.id))()
+local core = assert(SMODS.load_file("burglar/core.lua", mod.id))()
+local vanilla_keys = assert(SMODS.load_file("burglar/vanilla_keys.lua", mod.id))()
+local atlas_compat = assert(SMODS.load_file("burglar/atlas_compat.lua", mod.id))()
+local fresh_seed = assert(SMODS.load_file("burglar/seed.lua", mod.id))()
+local deck_cycle = assert(SMODS.load_file('burglar/deck_cycle_compat.lua', mod.id))()
 if MPAPI and MPAPI.on_loaded then MPAPI.on_loaded(deck_cycle.install) else deck_cycle.install() end
-local collection = assert(SMODS.load_file('draftout/collection.lua', mod.id))()
+local collection = assert(SMODS.load_file('burglar/collection.lua', mod.id))()
 if MPAPI and MPAPI.on_loaded then MPAPI.on_loaded(collection.install) else collection.install() end
 -- Repair existing animation atlas metadata after loader/texture-mod startup.
 local function repair_atlases()
@@ -34,9 +34,9 @@ end
 if MPAPI and MPAPI.on_loaded then MPAPI.on_loaded(repair_atlases) end
 local D = {core = core, mod = mod, message = "", page = 1}
 D.now = function() return love and love.timer and love.timer.getTime() or os.clock() end
-local diagnostics=assert(SMODS.load_file('draftout/diagnostics.lua',mod.id))()(D)
-D.clock = assert(SMODS.load_file('draftout/turn_clock.lua',mod.id))()
-local showman=assert(SMODS.load_file('draftout/showman.lua',mod.id))()(D)
+local diagnostics=assert(SMODS.load_file('burglar/diagnostics.lua',mod.id))()(D)
+D.clock = assert(SMODS.load_file('burglar/turn_clock.lua',mod.id))()
+local showman=assert(SMODS.load_file('burglar/showman.lua',mod.id))()(D)
 DRAFTOUT = D -- Developer access; no multiplayer or trust boundary is implied.
 -- Migrate pre-9-card settings once; saved runs own their original pool.
 if mod.config.draft_rules ~= 6 then
@@ -181,7 +181,7 @@ function D.shop_key(pool, forced_key, rarity)
     local key = core.sample(pool.keys, G.P_CENTERS, eligible, roll, weights, preferred)
     -- Exhaustion policy: allow a drafted duplicate rather than leak an off-pool Joker.
     if not key then key = core.sample(pool.keys, G.P_CENTERS, available, roll, nil, preferred) end
-    assert(key, "Draftout: no drafted Jokers remain available; check bans and installed mods.")
+    assert(key, "Burglar: no drafted Jokers remain available; check bans and installed mods.")
     return key
 end
 
@@ -216,7 +216,7 @@ function create_card(set, area, legendary, rarity, skip_materialize, soulable, f
         local source_pool = pool
         if append == "rif" then
             source_pool = {keys = D.common_keys(pool)}
-            assert(#source_pool.keys > 0, "Draftout: Riff-Raff has no drafted Common; generation trigger should have been skipped.")
+            assert(#source_pool.keys > 0, "Burglar: Riff-Raff has no drafted Common; generation trigger should have been skipped.")
         end
         forced_key = D.shop_key(source_pool, nil, append == "rif" and 0 or nil)
         legendary, soulable = nil, false
@@ -267,7 +267,9 @@ local function show()
         screen.nodes[#screen.nodes+1] = row(D.views.navigation())
     end
     if drafting and D.more_open then screen.nodes[#screen.nodes+1]=D.views.utilities() end
-    if not drafting and not (D.recap and D.recap.open) then screen.nodes[#screen.nodes+1]=row({button('Back','draftout_close',nil,2.9)}) end
+    if not drafting and not (D.recap and D.recap.open) then
+        screen.nodes[#screen.nodes+1]=row({button(D.mode=='mp' and 'Return to lobby' or 'Back','draftout_close',nil,3.3)})
+    end
     -- A split surface prevents the owned-roster sidebar from shifting the
     -- pack's 2x5 selection grid. Both sides live in the SAME overlay lifecycle.
     if drafting and D.roster_context and not (D.views and D.views.team) then
@@ -307,7 +309,7 @@ function D.screen()
     local active=s and not s.done and not D.local_launcher
     local nodes = {}
     if not active then
-        nodes[#nodes+1]=line("DRAFTOUT / LOCAL DEVELOPMENT DRAFT", 0.36)
+        nodes[#nodes+1]=line("BURGLAR / LOCAL DEVELOPMENT DRAFT", 0.36)
         nodes[#nodes+1]=line("Solo test: control each seat on this computer.", 0.25)
     end
     if D.local_launcher then
@@ -394,13 +396,15 @@ G.FUNCS.draftout_disarm = function()
 end
 
 D.ui = {line = line, row = row, button = button, show = show, overlay = live_overlay}
-assert(SMODS.load_file('draftout/pack_ui.lua', mod.id))()(D)
-assert(SMODS.load_file('draftout/draft_views.lua', mod.id))()(D)
-assert(SMODS.load_file('draftout/recap.lua', mod.id))()(D)
-assert(SMODS.load_file('draftout/roster_duel.lua', mod.id))()(D)
-assert(SMODS.load_file('draftout/mpapi.lua', mod.id))()(D)
-assert(SMODS.load_file('draftout/lobby_logo.lua', mod.id))()(D)
-assert(SMODS.load_file('draftout/results_ui.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/pack_ui.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/draft_views.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/recap.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/roster_duel.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/mpapi.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/lobby_entry.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/lobby_logo.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/results_ui.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/spectator.lua', mod.id))()(D)
 D.updates.add('diagnostics',function()
     -- Diagnostic/storage failures must never interrupt gameplay.
     if not pcall(diagnostics.tick) then diagnostics.status='Diagnostic update skipped' end
@@ -503,7 +507,7 @@ end
 
 mod.config_tab = function()
     local nodes = {
-        line("Joker draft prototype"),
+        line("Burglar settings"),
         row({D.timer_button(),settings_button('effects','draftout_effects_toggle',3.7)}),
         row({settings_button('alerts','draftout_alerts_toggle',4)}),
         row({settings_button('diagnostics','draftout_diagnostics_toggle',3.7),
@@ -511,6 +515,7 @@ mod.config_tab = function()
         {n=G.UIT.R,config={align='cm'},nodes={{n=G.UIT.T,config={ref_table=diagnostics,
             ref_value='status',scale=0.23,colour=G.C.WHITE}}}},
         row({button("Local development draft", "draftout_open", nil, 5)}),
+        row({button('Local spectator preview','draftout_spectate_demo',nil,5)}),
         row({button('Saved-roster 1v1 / bracket','draftout_bracket_open',nil,5)}),
         row({button("Disarm future runs", "draftout_disarm", nil, 5)}),
         line("Solo test pools apply to new normal runs.", 0.26),

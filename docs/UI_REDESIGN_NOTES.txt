@@ -1,0 +1,59 @@
+Historical UI notes. For v0.17.4 installation and fixes, follow README.md.
+
+DRAFTOUT v0.17.3 - experimental draft-screen UI redesign
+=========================================================
+Source: User-supplied Burglar v0.17.3 ZIP + previously provided burglar-lobby-logo build.
+
+WHAT CHANGED
+- The old miniature "Your Team" widget is no longer embedded in the pack selection panel.
+- A separate compact Joker Roster now appears LEFT of the main panel while drafting.
+  It shows up to 27 (3 rounds), or 35 (4 rounds), confirmed picks on one page.
+- Joker roster sorting is local / cosmetic only: click one owned Joker and then
+  another to swap their display positions. Use the < and > buttons to move the
+  selected Joker one position at a time. This does NOT change scoring or the
+  game's authoritative draft pool.
+- The main pack grid reserves 5 columns x 2 rows at all pick counts, including
+  after you've submitted a pick; empty cells are intentionally blank.
+- The pack/pick header now has a dark framed background.
+- Left roster and main draft screen share one overlay lifecycle so closing
+  the draft continues to work the old way.
+- Existing multiplayer, draft, timer, pack, and lobby logo mechanics are kept.
+
+INSTALL
+1. Close Balatro.
+2. Back up your existing %AppData%\Balatro\Mods\Burglar folder.
+3. Extract the FULL ZIP to %AppData%\Balatro\Mods, overwriting Burglar.
+   Your files should be Mods\Burglar\main.lua etc. Do not create a nested
+   Burglar\Burglar folder.
+4. Launch Balatro; join a private Battle Royale lobby; open the Burglar
+   draft using your existing F8 workflow.
+5. Test the draft UI in a non-critical lobby before using it with others.
+
+ROLLBACK
+Restore the backed-up Burglar folder. Do not rely on Steam reinstallation
+for mod files.
+
+IMPORTANT
+This is an experimental offline-tested change and has NOT been run inside Balatro.
+If your current Burglar contains additional changes since the supplied v0.17.3
+ZIP, installing this entire folder may overwrite those changes. Compare or
+merge the changed-files patch instead.
+
+CHANGED LOGIC FILES
+- main.lua
+- burglar/pack_ui.lua
+- burglar/draft_views.lua
+- burglar/overlay.lua
+- NEW: burglar/roster_order.lua
+
+UNCHANGED
+- Draft ownership / pack passing / gameplay scoring and network protocol.
+- Previous lobby-only logo module and user-supplied gold/sharpened logo assets.
+
+TECHNICAL NOTES
+- The display order isn't serialized across restarts; it persists during one
+  live session as long as the UI remains loaded.
+- The native Balatro cursor and Joker tooltip system are reused. This build
+  uses two-click swapping rather than untested drag-and-drop.
+- Fixed minimum dimensions don't guarantee exact matching at every unusual
+  aspect ratio or custom UI scale. Test 16:9 and 16:10 in Balatro.

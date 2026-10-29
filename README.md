@@ -1,110 +1,127 @@
-# Draftout v0.19.0
+# Burglar
 
-Credits: **Fantom and Cjpep**.
+**A two- or four-player Joker draft for Balatro.**
 
-Draft Jokers with two or four players, then play with personal Joker shop pools.
-The default draft gives each player 27 Jokers. Packs pass left on rounds 1/3
-and right on rounds 2/4. The host can choose 1–4 packs and 1–2 picks per turn;
-the fourth pack contains 8 Jokers, for a 35-Joker roster.
+Burglar brings Magic: The Gathering-style drafting to Balatro multiplayer. Before the run, you and your friends open packs of Jokers, pick what you want, and pass the rest around the table. The Jokers you draft become your personal shop pool for that match.
 
-## Install
+You don't get those Jokers immediately—you still have to find and buy them. The draft gives you a plan, and the run is where you find out whether it was a good one.
 
-1. Close Balatro. Move your old Draftout folder outside the Mods directory.
-2. Extract the player ZIP's **Draftout** folder into `%AppData%\Balatro\Mods`.
-   Replace the whole folder; don't nest or merge it with an older copy.
-3. Install Steamodded **1.0.0-beta-1814a or later**, Lovely **0.9.0 or later**,
-   MultiplayerAPI **1.0.0**, and MultiplayerPvP **1.0.0**. The supplied 1.0.0
-   builds are the integration baseline; later upstream releases need retesting.
-4. Remove the old Multiplayer / MultiplayerExperimental mods from active Mods.
-   MultiplayerSpeedrunning is optional. Everyone should use Draftout **0.19.0**.
+Made by **Cjpep**, based on **Fantom_Balatro's original idea**. A lot of the changes came from playing it with friends and figuring out what worked.
 
-This ZIP contains only Draftout. It does not replace game files, DLLs or other mods.
-The separate Developer ZIP is for reviewing source/tests, not another mod to install.
+## Downloads
 
-## Standard Draftout match
+Get a player ZIP from this repository's **Releases** page:
 
-1. Create a **private PvP Royale lobby**. Get exactly two or four players in.
-2. Open Draftout through **F8** or **Mods → Draftout → Config → Multiplayer PvP lobby draft**.
-3. Host: **Check / reset draft**, choose settings, then **Begin draft** after all clients confirm.
-4. Select Jokers from each pack and confirm. Hover cards for descriptions.
-   The left roster has page arrows and Draft order / Rarity / Name / Custom sorting.
-5. Once the draft is complete, close it, ready up in PvP, and let the host start.
+| Edition | What you get |
+| --- | --- |
+| **Burglar v0.21.1 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
+| **Burglar v0.21.1 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
 
-Everyone starts with four lives. Ante 1 is normal; Ante 2 onward replaces the
-boss with PvP. With 3–4 survivors, players below the final average lose a life.
-With two survivors, native PvP 1v1 scoring/early finishes apply.
+Install **one edition only**. Everyone in the lobby should use the same version and edition. Switch editions between matches by replacing the entire Burglar folder. The GitHub source includes spectating; use a release download for Standard.
 
-Shops, Buffoon packs, Judgment and Riff-Raff respect your roster. Wraith can
-produce any Rare, including Showman; Soul remains an exception. Matador,
-Mr. Bones, Luchador and Showman are not drafted. An extinct Gros Michel does
-not return to your shop pool. In-run Collection shows your roster and supports sorting.
+## What you need
 
-## Bracket play: draft once, play separate 1v1s
+- Balatro. The development baseline is **1.0.1o** on Windows.
+- **Steamodded 1.0.0-beta-1814a or later**.
+- **Lovely 0.10.0 or later**. Multiplayer 1.0.3 requires this newer minimum.
+- **MultiplayerAPI** and **MultiplayerPvP**, both **1.0.3 or later**. This release was checked against 1.0.3; later releases may need another compatibility review.
 
-Pairings are manual: for example, seats 1 vs 2 and 3 vs 4, then the winners.
+MultiplayerSpeedrunning is optional. Remove the old Multiplayer and MultiplayerExperimental mods from active Mods. These downloads don't include Balatro, Lovely DLLs, or the multiplayer dependencies.
 
-1. All four players complete the normal online draft above. You can stop there;
-   starting a four-player Royale match is not required.
-2. Each player opens **Save roster / bracket 1v1**, then **Save latest draft roster**.
-   The same screen is under **Mods → Draftout → Config → Saved-roster 1v1 / bracket**.
-3. **Copy roster code** is optional backup/export. **Import from clipboard** loads a code.
-   Your most recently saved/imported roster also persists in Draftout's config.
-4. Leave the draft lobby. Each pair creates a **private Nemesis (normal 1v1) lobby**.
-5. Both players open Saved-roster 1v1 and click **Enable for this lobby**.
-   Wait for **Rosters confirmed**, close the screen, ready up, and start through PvP.
-6. Winners repeat steps 4–5 for the final, using the same saved roster.
+## Install or update
 
-Each matchup is a **fresh run with four lives**. Money, deck upgrades, acquired
-Jokers and other progress do not transfer; only the drafted availability pool does.
-Native 1v1 combat remains in charge. The mode validates matching draft identifiers,
-different seats and non-overlapping rosters. It does not manage brackets or certify
-export codes against deliberate editing. Enable it again for each new matchup.
+1. Close Balatro.
+2. Press **Win + R**, enter `%AppData%\Balatro\Mods`, and open that folder.
+3. Move any old **Draftout** or **Burglar** installation somewhere outside `Mods`.
+4. Extract your chosen player ZIP and place its **Burglar** folder in `Mods`.
+5. Check that the path is `Mods\Burglar\Burglar.json`, without another Burglar folder inside it.
+6. Start Balatro and check that **Burglar** appears in the Mods list.
 
-Ordinary PvP does **not** inherit your saved roster. Both players must explicitly
-enable roster mode; it is unavailable in public/ranked, Royale or larger lobbies.
+Replace the whole folder when updating or changing editions. Don't merge editions or keep backup copies anywhere inside `Mods`.
 
-## Test on your own
+## Start a match
 
-Open **Config → Local development draft**. Choose two or four seats, start a
-fresh draft, and control each seat in turn. At completion, use a seat for a
-**new normal run outside API lobbies**. **Disarm future runs** turns that local
-assignment off. Local testing does not exercise online forwarding or multiplayer combat.
+1. Open **Multiplayer PvP → Create Lobby → Burglar → CREATE**.
+2. Share the lobby code. Burglar supports **two or four players**.
+3. The host clicks the **deck/stake button below Open draft** to use PvP's native deck picker. Choose balance rules under **Lobby Options**.
+4. Everyone clicks **Open draft**. The host's button prepares the draft; if preparation hasn't started, use **Prepare draft** inside the draft screen.
+5. The host chooses the draft settings, waits for all players to connect to the draft, then clicks **Start drafting**. Allow the initial two-second connection check to finish.
+6. Pick your Jokers and confirm. Hover cards to read them, and use the team tray to keep track of your roster.
+7. After the draft, return to the lobby. Guests ready up, and the host clicks **Start Game**.
 
-## Diagnostics and bug reports
+**F8** still opens the draft screen. A completed draft is kept if the host changes the deck or balance before starting the match. **Restart draft** starts over, so don't use it just to review your roster.
 
-Before a playtest, turn **Config → Diagnostics: On**. After a problem, use
-**Copy diagnostic log** or attach these files from Windows Explorer:
+## How the draft works
 
-`%AppData%\Balatro\draftout-diagnostics\current.log`
+The default is **three packs of nine Jokers per player**, with **one pick per turn**. Pick a Joker, pass the pack, and repeat until the packs are empty. Everyone finishes with **27 Jokers in their pool**.
 
-`%AppData%\Balatro\draftout-diagnostics\previous.log`
+Passing direction alternates between packs: packs 1 and 3 go one way; packs 2 and 4 go the other. The draft is shuffled fresh each time. Jokers that weren't included in the draft are unavailable through the normal roster-restricted sources for everyone.
 
-These are relative to LÖVE's save directory; custom installations may use a
-different save location. Each file is limited to 128 KiB. The clipboard contains
-the most recent 256 events. Disk writes are batched at most once per second
-while running (plus explicit enable/disable flushes); a crash may lose the last
-unflushed second. If disk writing fails, recent events remain available to copy.
+The host can choose **1–4 packs**, **1 or 2 picks per turn**, and a pick timer. Packs 1–3 contain nine Jokers each; the optional fourth pack contains eight, giving each player a 35-Joker roster. Your pool is a list of Jokers you can find during the run—you don't start with all of them equipped.
 
-Logs use anonymous session/run counters and seat numbers. They include draft
-phase, accepted/rejected PvP actions, readiness/lives snapshots on the host,
-and connection events. They exclude account IDs, names, lobby codes, seeds,
-chat, Joker pools and raw packet/error contents. Nothing is uploaded automatically.
-Diagnostics default to Off. Turning them off stops recording; existing files remain.
+## How the match works
 
-For a useful report, include your version, screenshot/crash text, ante, host,
-players remaining, and what each player clicked before the problem. A host log
-plus the affected player's log is especially useful for readiness/score issues.
+- Everyone starts with **four lives**.
+- **Ante 1** uses the normal Small Blind, Big Blind, and Boss Blind.
+- From **Ante 2 onward**, each ante ends with PvP after the Small and Big Blinds.
+- With **three or four players remaining**, anyone below the final average PvP score loses a life. Meeting the average is enough.
+- Once only **two players remain**, the match uses normal **1v1 scoring**, including the multiplayer mod's early-finish behavior.
+- The last player with lives wins.
 
-## Validation and remaining limits
+## Your Joker pool
 
-Offline tests cover draft rules, actual MPAPI action dispatch through a simulated
-relay, native referee behavior, long matches, host handover, roster-mode consent,
-export/import validation, diagnostics, UI ownership and packaging. Compatibility
-checks use supplied Steamodded/Lovely sources; they do not execute Lovely patches.
+**Shops, Buffoon packs, Judgment, and Riff-Raff** draw from your drafted roster. View and sort your roster through the **Joker Collection** during a Burglar run.
 
-The new roster mode and results styling still need Windows/LÖVE and official-server
-playtests. Rendering, real server forwarding, recovery ordering and arbitrary mod
-combinations are not established by offline tests. This remains a beta release.
+A few deliberate exceptions:
 
-See **CHANGELOG.md** for this release. The Developer bundle contains the test
-suite, release builder, architecture notes and historical release notes.
+- **Wraith** can give any Rare Joker, even one you didn't draft.
+- **The Soul** keeps its usual Legendary behavior.
+- **Showman** is Rare and isn't draftable, so Wraith can still find it.
+- **Matador, Mr. Bones, and Luchador** aren't in the draft.
+- Once **Gros Michel** goes extinct, it won't return to that player's shop pool.
+
+Getting a Joker through Wraith or The Soul doesn't add it to your drafted shop pool.
+
+## Try the draft by yourself
+
+Open **Mods → Burglar → Config → Local development draft**. Choose two or four seats and start a draft. You control each seat in turn, so you can try the picks, pack passing, timers, and roster controls without getting a group together.
+
+Afterward, you can assign a seat's pool to a **new normal run outside multiplayer lobbies**. Use **Disarm future runs** when you're finished testing so future solo runs return to normal. This mode doesn't test online connections or multiplayer scoring.
+
+## Spectating — Spectator edition only
+
+After losing all your lives in a four-player match, **stay in the lobby** and click **Watch remaining players** on the results screen. **F9** is also a shortcut. Choose a survivor with the Previous/Next controls.
+
+The feed starts at a shop or blind-selection checkpoint and uses a delay of at least five seconds. It shows the watched player's board, hand, shop offers, packs, and changing card areas. Survivors don't have to press anything.
+
+This is a reconstructed view from game snapshots, not a screen share or full replay. Some quick actions and animations may not appear. It is still experimental. Two-player matches end when someone is eliminated, so there's nobody left to spectate. The viewer doesn't support saved-roster bracket matches.
+
+For a scripted preview: **Mods → Burglar → Config → Local spectator preview**. It demonstrates the layout, not a live connection.
+
+## Optional: draft once, play separate 1v1s
+
+After a four-player draft, each player opens **Save roster / bracket 1v1 → Save latest draft roster**. Leave the draft lobby and make separate private **Nemesis** lobbies. Both players must open **Saved-roster 1v1 / bracket → Enable for this lobby**.
+
+Wait for **Rosters confirmed**, then ready up and start. Each match is a fresh run with four lives; only the drafted pool carries over. Pairings are manual. Ordinary PvP doesn't automatically inherit your roster—both players must enable this mode for each lobby.
+
+## Reporting a bug
+
+Include your version and edition, dependency versions, a screenshot or crash report, the ante, how many players were left, and what happened just before the problem. Mention whether you were hosting.
+
+For more detail, turn on **Mods → Burglar → Config → Diagnostics**, reproduce the issue, and use **Copy diagnostic log**. Logs are local and aren't uploaded automatically. The existing folder remains `%AppData%\Balatro\draftout-diagnostics` for compatibility.
+
+## Credits
+
+- **Cjpep** — development and implementation.
+- **Fantom_Balatro** — the original idea for bringing a Magic-style Joker draft to Balatro. Burglar started with his concept.
+- **NightmareBalatro, AustereGenie388, PatientEscape38, and UnseenExplosion** — playtesting, feedback, and helping find the things that broke.
+
+Thanks to the developers of **MultiplayerAPI, MultiplayerPvP, Steamodded, and Lovely** for the tools this runs on. The draft takes inspiration from **Magic: The Gathering**; the runs are still very much Balatro.
+
+## Source and releases
+
+The code uses the MIT license. The bundled Bungee font retains its license in `assets/fonts/OFL.txt`.
+
+Run `python tools/build_release.py` from a source checkout to build both player editions and the source ZIP. The source bundle includes a release guide and validation notes in `docs/`.
+
+The public name, install folder, manifest filename, and module folder are **Burglar**. Internal `Draftout`/`draftout` identifiers remain where used by saves, asset keys, callbacks, and multiplayer messages. They are intentional; renaming them isn't necessary to install or play.
