@@ -98,7 +98,7 @@ This is a reconstructed view from game snapshots, not a screen share or full rep
 
 For a scripted preview: **Mods → Burglar → Config → Local spectator preview**. It demonstrates the layout, not a live connection.
 
-## Optional: draft once, play separate 1v1s
+## Tournament Mode: draft once, play separate 1v1s, winners face each other. 
 
 After a four-player draft, each player opens **Save roster / bracket 1v1 → Save latest draft roster**. Leave the draft lobby and make separate private **Nemesis** lobbies. Both players must open **Saved-roster 1v1 / bracket → Enable for this lobby**.
 
@@ -112,9 +112,10 @@ For more detail, turn on **Mods → Burglar → Config → Diagnostics**, reprod
 
 ## Credits
 
-- **Cjpep** — development and implementation.
+- **Cjpep** — development and implementation (kappa).
 - **Fantom_Balatro** — the original idea for bringing a Magic-style Joker draft to Balatro. Burglar started with his concept.
 - **NightmareBalatro, AustereGenie388, PatientEscape38, and UnseenExplosion** — playtesting, feedback, and helping find the things that broke.
+- **GPT-6 Astra** — Made literally all of this.
 
 Thanks to the developers of **MultiplayerAPI, MultiplayerPvP, Steamodded, and Lovely** for the tools this runs on. The draft takes inspiration from **Magic: The Gathering**; the runs are still very much Balatro.
 
