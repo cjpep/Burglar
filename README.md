@@ -6,7 +6,7 @@ Burglar brings Magic: The Gathering-style drafting to Balatro multiplayer. Befor
 
 You don't get those Jokers immediately—you still have to find and buy them. The draft gives you a plan, and the run is where you find out whether it was a good one.
 
-Made by **Cjpep**, based on **Fantom_Balatro's original idea**. A lot of the changes came from playing it with friends and figuring out what worked.
+Made by **cjpep**, based on **Fantom_Balatro's original idea**. A lot of the changes came from playing it with friends and figuring out what worked.
 
 ## Downloads
 
