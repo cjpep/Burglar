@@ -1,0 +1,40 @@
+Historical UI notes. For v0.17.4 installation and fixes, follow README.md.
+
+DRAFTOUT v0.17.3 -- Burglar lobby logo addition
+=================================================
+
+WHAT CHANGED
+- Adds your exact original "Burglar" transparent PNG as assets/1x/burglar_lobby.png.
+- Includes nearest-neighbor 2x asset for older Steamodded versions.
+- Registers the texture in main.lua.
+- Adds draftout/lobby_logo.lua (private PvP Royale waiting-room UI only).
+- Does NOT change any draft, multiplayer transport, roster, scoring, or combat logic.
+
+INSTALL
+1. Exit Balatro.
+2. Back up your current Mods/Draftout folder (especially config/settings).
+3. Unzip this archive into %AppData%/Balatro/Mods/ and REPLACE the existing
+   Draftout folder. Do not install a second "Draftout" mod folder.
+4. Ensure the result is Mods/Draftout/main.lua, not Mods/Draftout/Draftout/main.lua.
+5. Relaunch Balatro and navigate to PvP > Battle Royale > Create Lobby.
+6. The logo appears only while a private PvP Royale lobby page is actually open.
+   It disappears on F8 draft overlay, other pages, other modes, and matches.
+
+TO ADJUST POSITION/SIZE
+- Edit draftout/lobby_logo.lua near the top:
+    local LOGO_WIDTH = 8.5   -- width in Balatro UI units
+    local LOGO_X = 0         -- horizontal offset from top-middle
+    local LOGO_Y = 1.15      -- vertical offset from top (larger = lower)
+- The height is calculated automatically from the 1024x384 PNG.
+- Change the above values, save, and restart the game.
+
+TECHNICAL NOTE
+The PvP lobby is built by MultiplayerPvP, not the F8 Draftout overlay. This
+addition wraps PVP.build_in_lobby_ui, marks only that page, and displays a
+separate, noninteractive UIBox anchored to the top-center of the viewport.
+It adds no visible elements to the PvP UI tree and does not move lobby buttons.
+
+VALIDATION
+Lua syntax verified; isolated Lua mock checked loading, page detection,
+creation, removal, F8 overlay behavior, and suppression on other pages/modes.
+Full Balatro runtime testing is not available in this environment.

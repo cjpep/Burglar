@@ -1,0 +1,19 @@
+Historical UI notes. For v0.17.4 installation and fixes, follow README.md.
+
+Draftout draft UI status change (2026-10-28)
+
+The seating panel now shows only the confirmation count beneath the four seats.
+Directional passing narration is no longer rendered in this panel.
+The draft passing algorithm and other gameplay logic are unchanged.
+The small arrows between seat labels remain as before.
+
+Visual analysis of the 1650x927 screenshot:
+- Overall panel proportions now fit the viewport well.
+- Header, seat status and pack backgrounds are visually distinct.
+- Optional next polish: simplify the four roster navigation/sort arrow buttons;
+  reduce excess empty margins inside the left sidebar; center the lower row
+  of four Jokers without changing the fixed grid footprint.
+- In the screenshot the Mime tooltip covers a card because it is hovered;
+  this is expected native tooltip behavior.
+
+Tested offline with texlua; cannot verify in Balatro itself.

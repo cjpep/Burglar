@@ -1,0 +1,23 @@
+{
+  "id": "Draftout",
+  "name": "Draftout - Spectator Table Prototype",
+  "author": [
+    "Fantom and Cjpep"
+  ],
+  "description": "Experimental Draftout build with a delayed read-only spectator board for eliminated players. Two- or four-player Joker draft and personal shop pools. Credits: Fantom and Cjpep.",
+  "prefix": "draftout",
+  "main_file": "main.lua",
+  "version": "0.20.3",
+  "priority": 10000001,
+  "badge_colour": "7555CC",
+  "dependencies": [
+    "Steamodded (>=1.0.0~BETA-1814a)",
+    "Lovely (>=0.9.0)",
+    "MultiplayerAPI (>=1.0.0)",
+    "MultiplayerPvP (>=1.0.0)"
+  ],
+  "conflicts": [
+    "Multiplayer",
+    "MultiplayerExperimental"
+  ]
+}
