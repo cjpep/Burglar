@@ -3,10 +3,11 @@
 return function(D)
     if not (MPAPI and PVP and PVP.id == 'MultiplayerPvP') then return end
     local C, core, U = D.mod.config, D.core, D.ui
-    local RULES = 16
+    local RULES = 19
     local B = {phase = 'idle', serial = 0, attached = true, failed_sessions = {}}
     D.mpbridge = B
     local recap=D.recap or assert(SMODS.load_file('burglar/recap.lua',D.mod.id))()(D)
+    local cubes=assert(SMODS.load_file('burglar/cubes.lua',D.mod.id))()(D)
     local T, session
     local function lobby() return MPAPI.get_current_lobby() end
     local function me() return lobby() and lobby().player_id end
@@ -81,8 +82,10 @@ return function(D)
     local function seat(id)
         for i, value in ipairs(B.ids or {}) do if value == id then return i end end
     end
-    local function cache_catalog()
-        B.catalog_keys=D.catalog()
+    local function cache_catalog(keys,name)
+        if not keys then keys,name=cubes.selected() end
+        B.catalog_keys=core.copy(keys)
+        B.cube_name=name or 'Default'
         B.catalog_set={}
         for _,key in ipairs(B.catalog_keys) do B.catalog_set[key]=true end
         B.catalog_signature=table.concat(B.catalog_keys,'|')
@@ -121,10 +124,13 @@ return function(D)
         assert(decks.synced(), 'Waiting for the server to confirm the selected deck')
         local ids,owner,room=roster()
         for _,id in ipairs(ids) do assert(connected(id),'All draft players must be connected') end
+        local keys,cube_name=cubes.selected()
+        local options=D.draft_options();options.player_count=#ids
+        cubes.capacity(keys,options)
         session.reset()
         B.ids,B.owner,B.room=ids,owner,room
         B.lobby,B.profile=lobby(),profile(lobby())
-        cache_catalog()
+        cache_catalog(keys,cube_name)
         B.serial = B.serial + 1
         B.session = me() .. ':' .. tostring(now()) .. ':' .. B.serial
         session.transition('checking')
@@ -133,9 +139,9 @@ return function(D)
         B.deadline = now() + 2
         C.armed_seat = false
         D.pack_ui.clear()
-        message('Checking private message routing and all Burglar players...')
+        message('Checking players. Draft pool: '..B.cube_name..' ('..B.catalog_count..' Jokers).')
         for _, id in ipairs(B.ids) do
-            if id ~= me() then send('offer', {ids = B.ids, owner = B.owner, catalog = signature(), rules = RULES}, id) end
+            if id ~= me() then send('offer', {ids = B.ids, owner = B.owner, catalog = signature(), keys=B.catalog_keys, cube_name=B.cube_name, rules = RULES}, id) end
         end
     end
 
@@ -165,7 +171,9 @@ return function(D)
         local options=D.draft_options()
         options.seed=seed
         options.player_count=#B.ids
+        cubes.capacity(B.catalog_keys,options)
         B.host_state = core.new(B.catalog_keys, options)
+        B.host_state.cube_name=B.cube_name
         session.transition('draft')
         B.clock=D.clock.new(C.pick_seconds)
         D.clock.reset(B.clock,B.host_state.round..':'..B.host_state.pick,now(),D.clock.cards(B.host_state))
@@ -263,20 +271,29 @@ return function(D)
             if B.failed_sessions[p.session or ''] then fail('Routing failed for this check; host must reset it'); return end
             if sender ~= owner or type(data.ids) ~= 'table'
                 or table.concat(data.ids, '|') ~= table.concat(ids, '|') then return end
-            local current_signature=B.session==p.session and signature() or table.concat(D.catalog(),'|')
-            if data.catalog ~= current_signature or data.rules ~= RULES then fail('Joker catalogs or Burglar versions differ'); return end
+            if data.rules~=RULES then fail('Burglar versions differ');return end
+            local valid,keys=pcall(cubes.validate,data.keys,true)
+            if not valid or data.catalog~=table.concat(keys,'|') then
+                fail('Host draft pool contains missing, excluded, or duplicate Jokers');return
+            end
+            if type(data.cube_name)~='string' or #data.cube_name>40 or data.cube_name:find('%c') then
+                fail('Invalid host draft pool name');return
+            end
+            if B.session==p.session and data.catalog~=signature() then
+                fail('Host draft pool changed; reset the draft');return
+            end
             if B.session == p.session then
                 if B.phase == 'checking' then send('hello', {catalog = signature(), rules = RULES}, owner) end
                 return
             end
             session.reset()
             B.ids, B.owner, B.room, B.session = ids, owner, code, p.session
-            cache_catalog()
+            cache_catalog(keys,data.cube_name)
             B.lobby, B.profile = lobby(), profile(lobby())
             session.transition('checking')
             C.armed_seat = false
             send('hello', {catalog = signature(), rules = RULES}, owner)
-            message('Joined draft check. Waiting for host to begin.')
+            message('Draft pool: '..B.cube_name..' ('..B.catalog_count..' Jokers). Waiting for host.')
         elseif p.session ~= B.session or not B.matches() then return
         elseif p.kind == 'fault' and is_host() then
             fail('Private custom-message routing failed; do not start the draft')
@@ -284,7 +301,7 @@ return function(D)
         elseif p.kind == 'hello' and is_host() and B.phase == 'checking' then
             if data.catalog ~= signature() or data.rules ~= RULES then fail('Joker catalogs or Burglar versions differ'); return end
             B.hello[sender] = true
-            if every(B.hello) then message('All clients checked. Host can begin the draft.') end
+            if every(B.hello) then message('All players checked: '..B.cube_name..'. Host can begin.') end
         elseif p.kind == 'intent' and is_host() and B.host_state then
             B.tick()
             local index=seat(sender)
@@ -324,7 +341,7 @@ return function(D)
             if data.done then
                 if not B.pool then
                     B.pool = {schema = 1, source = 'mpapi_pvp', room = code, session = B.session,
-                        draft_schema=core.SCHEMA, player_count=#B.ids, rounds=data.rounds, seat = data.seat, keys = core.copy(data.drafted)}
+                        copy_limits=core.has_copies(B.catalog_keys), draft_schema=core.SCHEMA, player_count=#B.ids, rounds=data.rounds, seat = data.seat, keys = core.copy(data.drafted)}
                     C.mp_last_pool = core.copy(B.pool)
                     SMODS.save_mod_config(D.mod)
                 end
@@ -373,6 +390,9 @@ return function(D)
             if D.diag and kind~='metadata_changed' then D.diag('lobby',{kind=kind}) end
             session.invalidate()
             if kind=='game_ended' or kind=='lobby_closed' then
+                if kind=='game_ended' and combat.active() then
+                    combat.rounds.handover.recover_outcome()
+                end
                 session.reset(kind=='game_ended' and 'Match ended. Start a fresh draft for the next match.' or 'Draft lobby closed.')
             elseif kind=='host_changed' then
                 if B.started and combat.active() then
@@ -506,6 +526,10 @@ return function(D)
         if not drafting then
             if recap.available() then nodes[#nodes+1]=U.row({recap.button()}) end
             if is_host() then
+                if not B.pool and B.phase~='checking' then
+                    nodes[#nodes+1]=D.draft_settings()
+                    nodes[#nodes+1]=U.row({D.timer_button()})
+                end
                 local label = (B.host_state or B.pool) and 'Restart draft'
                     or B.phase == 'checking' and 'Check players again' or 'Prepare draft'
                 nodes[#nodes+1]=U.row({U.button(label,'draftout_mp_check',nil,4.5)})
@@ -558,7 +582,7 @@ return function(D)
             B.last_offer = now()
             for _, id in ipairs(B.ids) do
                 if not B.hello[id] then send('offer', {ids = B.ids, owner = B.owner,
-                    catalog = signature(), rules = RULES}, id) end
+                    catalog = signature(), keys=B.catalog_keys, cube_name=B.cube_name, rules = RULES}, id) end
             end
         end
         if B.pending_launch then

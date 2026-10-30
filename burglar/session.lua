@@ -6,7 +6,7 @@ return function(state,dependencies)
     local transient={'ids','owner','room','session','lobby','profile','host_state','view','pool',
         'hello','completed','released','release_ack','clock','intents','expiring','pending_launch',
         'refresh_due','last_offer','deadline','last_marker','last_finish_retry','catalog_keys',
-        'catalog_set','catalog_signature','catalog_count','handled_run','notice'}
+        'cube_name','catalog_set','catalog_signature','catalog_count','handled_run','notice'}
     function session.transition(phase,text)
         assert(phases[phase],'Unknown Burglar session phase: '..tostring(phase))
         state.phase=phase

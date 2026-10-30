@@ -8,8 +8,12 @@ return function(D,M,R)
     local function lobby() return MPAPI.get_current_lobby() end
     local function active() return M.active() and not H.blocked end
     local function integer(v,lo,hi) return type(v)=='number' and v==math.floor(v) and v>=lo and v<=hi end
-    local function int_out(v) return {v.coeffiocient or 0,v.exponent or 0,v.e_count or 0} end
+    local function int_out(v)
+        if PVP.Score then return PVP.Score.or_zero(v) end
+        return {v.coeffiocient or 0,v.exponent or 0,v.e_count or 0}
+    end
     local function int_in(v)
+        if PVP.Score then return assert(PVP.Score.parse(v),'Invalid recovery score') end
         assert(type(v)=='table' and #v==3,'Invalid recovery score')
         for i=1,3 do assert(type(v[i])=='number' and v[i]==v[i] and math.abs(v[i])<math.huge,'Invalid recovery score') end
         return PVP.INSANE_INT.create(v[1],v[2],v[3])
@@ -18,6 +22,8 @@ return function(D,M,R)
         H.depth,H.pending,H.last_events,H.serial,H.authority,H.journal=0,{},{},0,0,{}
         H.blocked,H.encoded,H.resend_due,H.owner=nil,nil,nil,lobby().host_id
         H.departed={}
+        H.completed=nil
+        H.next_check=love.timer.getTime()+3
     end
     local function snapshot()
         local players={}
@@ -42,11 +48,20 @@ return function(D,M,R)
                 ante=R.ante,settled=R.settled,start_event=copy(R.start_event),serial=H.serial,events=copy(H.last_events),revision=M.revision,
                 -- Recovery peers can inspect this metadata with code; the recap UI
                 -- and normal recap packets remain gated on the local GAME_ENDED.
+                completed=copy(H.completed),
                 recap=ctx and ctx.recovery and copy(ctx.recovery) or nil}}
     end
     function H.commit()
         if not active() or not lobby().is_host or H.depth>0 or not next(PVP.REF.players or {}) then return end
         if #H.pending>0 then H.last_events=copy(H.pending) end
+        -- Keep the complete terminal transaction after later ante/ready writes.
+        -- Clients recover outcomes, never recompute scores or deduct lives.
+        for _,entry in ipairs(H.pending) do
+            if entry.key=='pvp_end_pvp' or entry.key=='pvp_win' then
+                H.completed={ante=R.ante or 0,duel=R.duel,events=copy(H.pending)}
+                break
+            end
+        end
         local snap=snapshot()
         local encoded=MPAPI.json_encode(snap)
         if encoded~=H.encoded then
@@ -127,6 +142,7 @@ return function(D,M,R)
         assert(start==nil or (type(start)=='table' and start.key=='pvp_start_blind'
             and integer(start.id,1,s.serial) and type(start.data)=='table'),'Invalid recovery start event')
         R.start_event=copy(start)
+        H.completed=copy(s.completed)
         PVP.REF.players,PVP.REF.ready_tracker=players,tracker
         for key,source in pairs({nemesis_of='nemesis_of',used_pairs='used_pairs',team_lives='team_lives',
             team_card_target='team_card_target',eliminated='eliminated'}) do PVP.REF[key]=copy(snap[source] or {}) end
@@ -175,7 +191,10 @@ return function(D,M,R)
         return true
     end
     function H.tick()
-        if not active() or not H.resend_due then return end
+        if not active() then return end
+        local now=love.timer.getTime()
+        if not H.resend_due and now<(H.next_check or 0) then return end
+        H.next_check=now+3
         H.resend_due=nil;H.observe()
         local ordered={};for seq in pairs(H.journal) do ordered[#ordered+1]=seq end;table.sort(ordered)
         H.resending=true
@@ -187,6 +206,35 @@ return function(D,M,R)
         end)
         H.resending=nil
         if not ok then error(err) end
+        H.recover_outcome()
+    end
+    function H.recover_outcome()
+        local l=lobby()
+        local snap=(l:get_metadata() or {})[PVP.REF_CHECKPOINT_KEY or '_pvp_ref']
+        local s=type(snap)=='table' and snap.draftout
+        if type(s)~='table' or s.session~=M.session or s.run~=M.run
+            or s.owner~=M.host or s.authority~=H.authority then return end
+        local done=s.completed
+        local ante=G.GAME and G.GAME.round_resets and G.GAME.round_resets.ante
+        if type(done)~='table' or done.ante~=ante or type(done.events)~='table'
+            or #done.events>20 or type(done.duel)~='boolean' then return end
+        for _,entry in ipairs(done.events) do
+            if type(entry)=='table' and R.outcomes[entry.key] and entry.key~='pvp_start_blind'
+                and integer(entry.id,1,9007199254740991) and type(entry.data)=='table' then
+                local token=entry.key..':'..tostring(entry.data.player_id or '')
+                if entry.id>(R.seen_outcomes[token] or 0) then
+                    local params=copy(entry.data)
+                    params._draftout={session=M.session,run=M.run,seq=entry.id,
+                        ante=done.ante,round=0,blind='',pvp=true,duel=done.duel,
+                        event=entry.id,authority=s.authority}
+                    -- The host-owned server checkpoint was committed before the
+                    -- broadcast. Replay through API validation and our normal
+                    -- epoch/event guards, with the original event identity.
+                    MPAPI._internal.lobby.deliver_action(l,{action=entry.key,
+                        from=s.owner,to=l.player_id,params=params})
+                end
+            end
+        end
     end
     function H.install()
         local original=PVP.referee_checkpoint

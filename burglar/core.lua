@@ -3,6 +3,14 @@ local M = {}
 M.SCHEMA = 6
 local MODULUS = 2147483647
 
+-- Copy IDs are draft identities only; never register them as game centers.
+function M.key(id) return type(id)=='string' and (id:match('^(j_[%w_]+)#%d+$') or id) or id end
+function M.has_copies(keys)
+    local seen={}
+    for _,id in ipairs(keys or {}) do local key=M.key(id);if seen[key] then return true end;seen[key]=true end
+    return false
+end
+
 local function integer(n, lo, hi)
     return type(n) == "number" and n == math.floor(n) and n >= lo and n <= hi
 end
@@ -69,6 +77,7 @@ function M.new(keys, options)
     local s = {
         schema = M.SCHEMA, player_count = players, seed = seed, pack_size = size, rounds = rounds, picks_per_turn = picks, total = minimum,
         round = 1, pick = 1, revision = 0, done = false,
+        catalog=M.copy(keys), copy_limits=M.has_copies(keys),
         packs = {}, current = {}, submitted = {}, pools = {}, history = {},
     }
     for seat=1,players do s.pools[seat],s.history[seat]={},{} end
@@ -174,7 +183,7 @@ end
 function M.export_pool(s, seat)
     assert(s.done, "Complete the draft before arming a pool")
     assert(integer(seat, 1, M.player_count(s)), "Invalid seat")
-    return {schema = 1, draft_schema = s.schema, player_count = M.player_count(s), rounds = s.rounds, seed = s.seed, seat = seat, keys = M.copy(s.pools[seat])}
+    return {schema = 1, copy_limits=s.copy_limits, draft_schema = s.schema, player_count = M.player_count(s), rounds = s.rounds, seed = s.seed, seat = seat, keys = M.copy(s.pools[seat])}
 end
 
 -- Returns a key or nil. Eligibility (bans/owned cards) is supplied by the game adapter.

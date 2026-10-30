@@ -1,5 +1,6 @@
 return {
     draft_rules = 6,
+    draft_cube = 'default',
     pack_size = 9,
     local_players = 4,
     picks_per_turn = 1,

@@ -4,7 +4,7 @@ return function(D)
     local K={message='Save a completed roster, then join a private two-player Nemesis lobby.',page=1}
     D.roster_duel=K
     local C,U,core=D.mod.config,D.ui,D.core
-    local allowed={};for _,key in ipairs(assert(SMODS.load_file('burglar/vanilla_keys.lua',D.mod.id))()) do allowed[key]=true end
+    local allowed={};for _,key in ipairs(assert(SMODS.load_file('burglar/vanilla_keys.lua',D.mod.id))()) do allowed[core.key(key)]=true end
     local function lobby() return MPAPI and MPAPI.get_current_lobby() end
     local function now() return D.now and D.now() or love.timer.getTime() end
     local function integer(n,a,b) return type(n)=='number' and n==math.floor(n) and n>=a and n<=b end
@@ -18,11 +18,11 @@ return function(D)
         assert(type(data.keys)=='table' and #data.keys==core.roster_size(data.rounds),'Incomplete roster')
         local keys,seen={},{}
         for index,key in pairs(data.keys) do
-            assert(integer(index,1,#data.keys) and type(key)=='string' and allowed[key]
-                and G.P_CENTERS[key] and not seen[key],'Unknown, excluded or repeated Joker')
+            assert(integer(index,1,#data.keys) and type(key)=='string' and allowed[core.key(key)]
+                and G.P_CENTERS[core.key(key)] and not seen[key],'Unknown, excluded or repeated Joker')
             seen[key]=true;keys[index]=key
         end
-        return {schema=1,event=data.event,players=data.players,seat=data.seat,rounds=data.rounds,keys=keys}
+        return {schema=1,event=data.event,players=data.players,seat=data.seat,rounds=data.rounds,keys=keys,copy_limits=data.copy_limits==true}
     end
     -- Correlation only, not a signature. Do not export the source session's account ID.
     local function event_id(value)
@@ -35,7 +35,7 @@ return function(D)
         local pool=(D.mpbridge or {}).pool or C.mp_last_pool
         assert(pool and pool.draft_schema==core.SCHEMA and pool.session,'Finish an online draft first')
         C.bracket_roster=K.validate({schema=1,event=event_id(pool.session),players=pool.player_count or 4,
-            rounds=pool.rounds or 3,seat=pool.seat,keys=pool.keys})
+            rounds=pool.rounds or 3,seat=pool.seat,keys=pool.keys,copy_limits=pool.copy_limits})
         save();K.page=1;K.message='Roster saved. You can reuse it in each bracket round.'
     end
     function K.export()
@@ -64,7 +64,7 @@ return function(D)
         return ids
     end
     local function same(a,b)
-        return a.event==b.event and a.players==b.players and a.seat==b.seat and a.rounds==b.rounds
+        return a.copy_limits==b.copy_limits and a.event==b.event and a.players==b.players and a.seat==b.seat and a.rounds==b.rounds
             and table.concat(a.keys,'|')==table.concat(b.keys,'|')
     end
     local function manifest(l) return (l and l:get_metadata() or {}).draftout_bracket end
@@ -189,7 +189,7 @@ return function(D)
         assert(K.started and K.started.lobby==lobby(),'Saved-roster match was not confirmed')
         local t=K.started.ticket
         return {schema=1,draft_schema=core.SCHEMA,source='draftout_bracket',player_count=t.players,
-            rounds=t.rounds,seat=t.seat,keys=core.copy(t.keys),event=t.event}
+            copy_limits=t.copy_limits,rounds=t.rounds,seat=t.seat,keys=core.copy(t.keys),event=t.event}
     end
     function K.event(l,kind)
         if K.lobby~=l then return end

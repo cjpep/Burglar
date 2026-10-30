@@ -57,6 +57,10 @@ class CollectionTests(unittest.TestCase):
     def run_lua(self,code): return self.lua.execute(code)
     def value(self,code): return self.lua.eval(code)
 
+    def test_duplicate_copies_render_as_separate_roster_entries(self):
+        self.run_lua("G.GAME.draftout_pool.keys={'j_1','j_1#2','j_2'};ui=create_UIBox_your_collection_jokers()")
+        self.assertEqual(self.value('shown()'),'j_1,j_1,j_2')
+
     def test_all_drafted_types_paginate_and_owned_exceptions_do_not(self):
         self.run_lua('ui=create_UIBox_your_collection_jokers()')
         self.assertEqual(self.value('#last_cycle.options'),3)

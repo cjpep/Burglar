@@ -118,7 +118,7 @@ return function(D,A,M)
         local hands={}
         for _,p in ipairs(players) do
             p.starting_hands=R.ready[p.id].hands;hands[p.id]=p.starting_hands
-            p.score=PVP.INSANE_INT.empty();p.hands_left=p.starting_hands
+            p.score=PVP.Score and PVP.Score.ZERO or PVP.INSANE_INT.empty();p.hands_left=p.starting_hands
             p.played_this_blind,p.is_ready,p.first_ready,p.lives_blocker=false,false,false,false
         end
         local first_player=''
@@ -166,17 +166,17 @@ return function(D,A,M)
         local hands=tonumber(params.handsLeft)
         if not integer(hands,0,p.hands_left) then return end
         local raw=tostring(params.score or '0')
-        if #raw>128 or not (raw:match('^%d+%.?%d*$') or raw:match('^%d+%.?%d*[eE][+-]?%d+$')) then return end
+        if #raw>128 or (not PVP.Score and not (raw:match('^%d+%.?%d*$') or raw:match('^%d+%.?%d*[eE][+-]?%d+$'))) then return end
         local ok,score=pcall(function()
-            local value=PVP.INSANE_INT.from_string(raw)
+            local value=PVP.Score and assert(PVP.Score.parse(raw)) or PVP.INSANE_INT.from_string(raw)
             A.rank({{id=id,score=value}}) -- Validate before mutating authoritative state.
             return value
         end)
         if not ok then return end
         p.score,p.hands_left=score,hands
         if params.skips then p.skips=tonumber(params.skips) or p.skips end
-        p.played_this_blind=PVP.INSANE_INT.greater_than(score,PVP.INSANE_INT.empty())
-        if PVP.INSANE_INT.greater_than(score,p.highest_score) then p.highest_score=score end
+        p.played_this_blind=PVP.Score and PVP.Score.greater(score,PVP.Score.ZERO) or (not PVP.Score and PVP.INSANE_INT.greater_than(score,PVP.INSANE_INT.empty()))
+        if (PVP.Score and PVP.Score.greater(score,p.highest_score)) or (not PVP.Score and PVP.INSANE_INT.greater_than(score,p.highest_score)) then p.highest_score=score end
         R.resolve()
     end
     function handlers.ante(id,params)

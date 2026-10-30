@@ -124,11 +124,23 @@ class Client:
                     SMODS.stake_from_index=function() return 'stake_white' end
                     G.P_CENTERS.stake_white={name='White Stake'}
                 end
-                PVP.UTILS={string_split=function(value)
+                PVP.UTILS={version_mismatches=function() return {} end,string_split=function(value)
                     local out={}; for part in value:gmatch('[^e]+') do out[#out+1]=part end; return out
                 end}
                 number_format=tostring
-                assert(loadfile(pvp_root..'/lib/insane_int.lua'))()
+                local legacy=loadfile(pvp_root..'/lib/insane_int.lua');if legacy then legacy() end
+                if loadfile(pvp_root..'/lib/score.lua') then
+                    assert(loadfile(api_root..'/lib/big_score.lua'))()
+                    assert(loadfile(pvp_root..'/lib/score.lua'))()
+                    -- Test helpers keep their old spelling, but produce native 1.0.4 score text.
+                    PVP.INSANE_INT={empty=function() return '0' end,
+                        from_string=PVP.Score.from_game_value,to_string=function(v) return v end,
+                        greater_than=PVP.Score.greater,equal=PVP.Score.equal,
+                        create=function(c,e) return PVP.Score.from_game_value(tostring(c)..'e'..tostring(e)) end}
+
+                    assert(loadfile(pvp_root..'/pvp_api/round_sync.lua'))()
+                    sendDebugMessage=function() end;sendWarnMessage=function() end
+                end
                 for _,path in ipairs({'lib/pending_death.lua','pvp_api/server_hold.lua','lib/ante_nemesis.lua','ui/game/pending_death.lua'}) do
                     local f=loadfile(pvp_root..'/'..path);if f then f() end
                 end
@@ -182,6 +194,7 @@ class Client:
                     for _,child in ipairs(node.nodes or {}) do local found=find_deck(child); if found then return found end end
                 end
                 G.FUNCS.multiplayer_blind_chip_UI_scale=function() return 'native HUD' end
+                G.STAGES={RUN=1};G.STAGE=1
                 G.GAME={current_round={hands_played=1}}; G.STATES={ROUND_EVAL=1,NEW_ROUND=2}
                 outcomes={}; client_lives={}; client_eliminated={}
                 for _,key in ipairs({'pvp_player_lives','pvp_eliminated','pvp_end_pvp','pvp_win','pvp_royale_target','pvp_start_blind'}) do
@@ -542,6 +555,8 @@ class ApiTests(unittest.TestCase):
                 self.assertEqual([e['keys'][0] for e in player['history']],player['keys'])
                 self.assertEqual(player['history'][-1]['round'],4)
 
+    @unittest.skipIf((API/'api/matchmaking/group/party.lua').exists(),
+        'Legacy picker; native_picker_spec covers the 1.0.3 replacement')
     def test_shared_deck_host_alone_and_guests_read_only(self):
         bus=Bus(); host=bus.clients[0]
         host.run("saved_players=current._players; current._players={p1=saved_players.p1}")
@@ -564,6 +579,8 @@ class ApiTests(unittest.TestCase):
         ok,_=host.run("return pcall(D.deck_picker.select,'b_modded',current)")
         self.assertFalse(ok)
 
+    @unittest.skipIf((API/'api/matchmaking/group/party.lua').exists(),
+        'Legacy picker; native_picker_spec covers the 1.0.3 replacement')
     def test_shared_deck_after_draft_launch_and_native_run_handoff(self):
         bus=Bus(); bus.draft(); host=bus.clients[0]
         pools=[c.value('B.pool.keys') for c in bus.clients]
@@ -760,7 +777,9 @@ class ApiTests(unittest.TestCase):
             bus.flush();host.run('PVP.pvp_start_match();Game:update(0.02)');bus.flush()
             for c,(_,pool) in zip(bus.clients,saved):
                 self.assertEqual(c.value('run_pool.keys'),pool)
-                self.assertEqual(c.value('run_back'),'Yellow Deck')
+                if c.value('D.deck_picker.native_picker'):
+                    self.assertEqual(c.value('current:get_metadata().deck'),'Yellow Deck')
+                else:self.assertEqual(c.value('run_back'),'Yellow Deck')
                 self.assertEqual(c.value('current:get_metadata().ruleset'),'ruleset_mp_vanilla')
 
     def test_balance_controls_block_guests_active_draft_and_unacked_release(self):
@@ -857,7 +876,7 @@ class ApiTests(unittest.TestCase):
     def wire(self,bus,index,action,**params):
         client=bus.clients[index-1]
         client.lua.globals().report=client.lua.table_from(dict(action=action,**params),recursive=True)
-        client.run('Client.send(report)')
+        client.run('if PVP.Score and report.score then report.score=PVP.Score.from_game_value(report.score) end;Client.send(report)')
         bus.flush()
 
     def wire_open(self,bus,ante):
@@ -1076,6 +1095,88 @@ class ApiTests(unittest.TestCase):
         self.wire(bus,3,'playHand',score='200',handsLeft=3)
         self.wire(bus,4,'playHand',score='100',handsLeft=0)
         self.assertEqual(host.value('PVP.REF.players.p4.lives'),3)
+
+    def recovery_tick(self,bus):
+        for c in bus.clients:
+            if c.index not in bus.offline:c.run('clock=clock+4;Game:update(0.02)')
+        bus.flush()
+
+    def test_recovery_retries_missing_final_report_through_api(self):
+        bus=self.start_average_match();host=bus.clients[0]
+        self.wire_open(bus,2)
+        bus.drop=lambda sender,p:sender=='p4' and p.get('action')=='pvp_play_hand'
+        for i in range(1,5):self.wire(bus,i,'playHand',score=str(i*100),handsLeft=0)
+        self.assertTrue(host.value('D.average_pvp.rounds.open'))
+        bus.drop=None;self.recovery_tick(bus)
+        self.assertFalse(host.value('D.average_pvp.rounds.open'))
+        self.assertEqual(self.outcome_count(host,'pvp_end_pvp'),1)
+        self.recovery_tick(bus)
+        self.assertEqual([host.value(f'PVP.REF.players.p{i}.lives') for i in range(1,5)],[3,3,4,4])
+        self.assertEqual(self.outcome_count(host,'pvp_end_pvp'),1)
+
+    def test_recovery_retains_outcome_after_next_ante_metadata(self):
+        bus=self.start_average_match();host=bus.clients[0]
+        self.wire_open(bus,2)
+        bus.drop=lambda _,p:p.get('action') in ('pvp_end_pvp','pvp_player_lives')
+        for i in range(1,5):self.wire(bus,i,'playHand',score=str(i*100),handsLeft=0)
+        self.assertEqual(self.outcome_count(bus.clients[3],'pvp_end_pvp'),0)
+        bus.drop=None
+        host.run('G.GAME.round_resets.ante=3')
+        self.wire(bus,1,'setAnte',ante=3);self.wire(bus,1,'newRound')
+        self.recovery_tick(bus)
+        for c in bus.clients[1:]:
+            self.assertEqual(self.outcome_count(c,'pvp_end_pvp'),1)
+            self.assertEqual(c.value('client_lives.p2'),3)
+        self.recovery_tick(bus)
+        for c in bus.clients[1:]:self.assertEqual(self.outcome_count(c,'pvp_end_pvp'),1)
+        self.assertEqual(self.outcome_count(host,'pvp_end_pvp'),0,'Do not apply old outcomes to a new ante')
+
+    def test_recovery_twelve_rounds_lost_results_and_native_duel(self):
+        bus=Bus(checkpoints=True,native_outcomes=True);bus.draft();host=bus.clients[0]
+        host.run('PVP.pvp_start_match();Game:update(0.02)');bus.flush()
+        for offset,loser in enumerate([4]*4+[3]*4+[2]*4):
+            ids=self.wire_open(bus,offset+2)
+            bus.drop=lambda _,p:p.get('action') in ('pvp_end_pvp','pvp_win','pvp_eliminated','pvp_player_lives')
+            for i in reversed(ids):self.wire(bus,i,'playHand',score='0' if i==loser else '100',handsLeft=0)
+            bus.drop=None;self.recovery_tick(bus);self.recovery_tick(bus)
+            self.assertEqual(self.outcome_count(host,'pvp_end_pvp'),min(offset+1,11))
+            self.assertEqual(host.value(f'PVP.REF.players.p{loser}.lives'),3-offset%4)
+        for c in bus.clients:
+            self.assertEqual(self.outcome_count(c,'pvp_win'),1)
+            self.assertEqual(c.value('server_results'),['p1'])
+        self.assertTrue(host.value('PVP.referee_resolve_2p_round==native_two_player_resolver'))
+
+    def test_recovery_before_match_ended_and_after_host_change(self):
+        bus=self.start_average_match();host=bus.clients[0]
+        self.wire_open(bus,2)
+        bus.drop=lambda _,p:p.get('action')=='pvp_end_pvp'
+        for i in range(1,5):self.wire(bus,i,'playHand',score='100',handsLeft=0)
+        bus.drop=None;bus.handover(1,2)
+        self.recovery_tick(bus)
+        for c in bus.clients[1:]:self.assertEqual(self.outcome_count(c,'pvp_end_pvp'),1)
+        # A terminal server notification can precede the next recovery tick.
+        bus=self.start_average_match();host=bus.clients[0]
+        self.wire_open(bus,2)
+        bus.drop=lambda _,p:p.get('action')=='pvp_win'
+        for i in (4,3,2):
+            host.run(f"PVP.referee_n_player_forfeit('p{i}')");bus.flush()
+        bus.drop=None
+        for c in bus.clients:
+            c.run("current:_fire('game_ended',{})")
+            self.assertEqual(self.outcome_count(c,'pvp_win'),1)
+            self.assertFalse(c.value('D.average_pvp.active()'))
+
+    def test_recovery_ignores_checkpoint_from_other_run_or_authority(self):
+        bus=self.start_average_match();self.wire_open(bus,2)
+        bus.drop=lambda _,p:p.get('action')=='pvp_end_pvp'
+        for i in range(1,5):self.wire(bus,i,'playHand',score='100',handsLeft=0)
+        bus.drop=None;guest=bus.clients[1]
+        for field,value in [('run',"'old-run'"),('owner',"'p4'"),('authority','999')]:
+            guest.run(f"saved=current._metadata._pvp_ref.draftout.{field};current._metadata._pvp_ref.draftout.{field}={value};clock=clock+4;Game:update(0.02)")
+            self.assertEqual(self.outcome_count(guest,'pvp_end_pvp'),0)
+            guest.run(f'current._metadata._pvp_ref.draftout.{field}=saved')
+        guest.run('clock=clock+4;Game:update(0.02)')
+        self.assertEqual(self.outcome_count(guest,'pvp_end_pvp'),1)
 
     def test_twelve_consecutive_pvps_reach_one_winner_and_recap(self):
         bus=Bus(checkpoints=True);bus.draft();host=bus.clients[0]
@@ -1333,7 +1434,7 @@ class ApiTests(unittest.TestCase):
             G.GAME.blind={chips=600};G.GAME.chips=100
             G.GAME.current_round={hands_played=4};G.STATE_COMPLETE=false
         ''')
-        blind_report=re.search(r'function PVP\.ACTIONS\.blind_result\(beaten\).*?\nend',native_fail,re.S)
+        blind_report=re.search(r'function PVP\.ACTIONS\.blind_result\(beaten[^)]*\).*?\nend',native_fail,re.S)
         if blind_report: client.run(blind_report.group())
         client.run(re.search(r'function PVP\.ACTIONS\.fail_round\(hands_used\).*?\nend',native_fail,re.S).group())
         client.run('local update_new_round_ref=Game.update_new_round\n'+re.search(r'function Game:update_new_round\(dt\).*?\nend',native_state,re.S).group())
@@ -1444,7 +1545,7 @@ class ApiTests(unittest.TestCase):
         self.assertTrue(guest.value("title.config.object.config.string[1].ref_value=='title'"))
         self.assertFalse(guest.value('PVP.UI.cam_timer_opponent()'))
         guest.run("PVP.GAME.timer_started=true; MPAPI.Blinds.bl_mp_nemesis:receive({from='p2',data={score='100',handsLeft=0,skips=0}})")
-        self.assertEqual(guest.value('PVP.GAME.enemy.real_score.coeffiocient'),100)
+        self.assertEqual(guest.value("PVP.Score and tonumber(PVP.GAME.enemy.real_score) or PVP.GAME.enemy.real_score.coeffiocient"),100)
         self.assertEqual(guest.value('D.average_pvp.ui.average'),'325')
         self.assertFalse(guest.value('PVP.GAME.timer_started'))
         guest.run('PVP.LOBBY.config.hide_score_until_played=true; G.GAME.current_round.hands_played=0; G.FUNCS.multiplayer_blind_chip_UI_scale(hud)')
@@ -1672,7 +1773,7 @@ class ApiTests(unittest.TestCase):
     def test_delayed_duplicate_offer_does_not_reset_draft(self):
         bus=Bus(); bus.begin(); host=bus.clients[0]
         packet={'protocol':4,'kind':'offer','room':'ROOM','session':host.value('B.session'),'recipient':'p2',
-                'data':{'ids':['p1','p2','p3','p4'],'owner':'p1','catalog':'|'.join(host.value('keys')),'rules':16}}
+                'data':{'ids':['p1','p2','p3','p4'],'owner':'p1','catalog':'|'.join(host.value('keys')),'keys':host.value('keys'),'cube_name':'Default','rules':19}}
         host.run('B.start_draft()'); bus.flush()
         remote=bus.clients[1]
         remote.receive({'cid':'delayed','action':'draftout_pack_v4','from':'p1','to':'p2','params':{'packet':packet}})

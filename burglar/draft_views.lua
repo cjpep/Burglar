@@ -280,7 +280,7 @@ return function(D)
         local keys=order.sync(state,get_keys() or {},{
             name=function(key) return D.joker_name and D.joker_name(key) or key end,
             rarity=function(key)
-                local value=(G.P_CENTERS[key] or {}).rarity
+                local value=(G.P_CENTERS[D.core.key(key)] or {}).rarity
                 return ({Common=1,Uncommon=2,Rare=3,Legendary=4})[value] or tonumber(value) or 0
             end,
         })
@@ -346,11 +346,11 @@ return function(D)
     function V.completed(keys,instruction,compact)
         local counts={0,0,0}
         for _,key in ipairs(keys) do
-            local rarity=G.P_CENTERS[key] and G.P_CENTERS[key].rarity
+            local rarity=G.P_CENTERS[D.core.key(key)] and G.P_CENTERS[D.core.key(key)].rarity
             rarity=({Common=1,Uncommon=2,Rare=3})[rarity] or rarity
             if counts[rarity] then counts[rarity]=counts[rarity]+1 end
         end
-        local nodes={V.header('DRAFT COMPLETE - '..#keys..' JOKER TYPES'),
+        local nodes={V.header('DRAFT COMPLETE - '..#keys..' JOKERS'),
             U.line(counts[1]..' Common / '..counts[2]..' Uncommon / '..counts[3]..' Rare',0.28)}
         if not compact then
             local signature=table.concat(keys,'|')

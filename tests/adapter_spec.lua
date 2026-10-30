@@ -219,7 +219,7 @@ end
 SMODS.current_mod.config.picks_per_turn=1
 local one=D.start('ONE_PICK'); local one_cards=cards_in(D.screen())
 one_cards[1]:click();one_cards[2]:click()
-check(#D.pack_ui.choices()==1 and one_cards[1].draftout_selected and not one_cards[2].draftout_selected,'One-pick UI enforces host rule')
+check(#D.pack_ui.choices()==1 and not one_cards[1].draftout_selected and one_cards[2].draftout_selected,'One-pick UI replaces the previous selection')
 G.FUNCS.draftout_pack_confirm()
 check(#one.pools[1]==1,'One-pick confirmation matches core rule')
 SMODS.current_mod.config.picks_per_turn=2
@@ -254,8 +254,8 @@ for _, card in ipairs(previews) do
     check(not card.highlighted, 'Preview selection does not activate native Use/Sell buttons')
 end
 previews[1]:click(); previews[2]:click(); previews[3]:click()
-check(previews[1].draftout_selected and previews[2].draftout_selected and not previews[3].draftout_selected, 'Two-selection limit')
-previews[1]:click(); previews[3]:click()
+check(not previews[1].draftout_selected and previews[2].draftout_selected and previews[3].draftout_selected, 'Full pair replaces oldest selection')
+previews[2]:click(); previews[4]:click()
 check(not previews[1].draftout_selected and previews[3].draftout_selected, 'Can change choices')
 G.FUNCS.draftout_pack_confirm()
 check(#state.pools[1] == 2 and D.pack_ui.active and #D.pack_ui.choices()==0, 'Confirm automatically advances to the next seat')

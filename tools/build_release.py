@@ -28,6 +28,7 @@ def selected(root, source=False):
         if any(part.startswith('.') or part == '__pycache__' for part in rel.parts):
             continue
         keep = name in TOP or (rel.parts[0] == 'burglar' and p.suffix == '.lua')
+        keep |= rel.parts[0] == 'cubes' and p.suffix in {'.json', '.md'}
         keep |= rel.parts[0] == 'assets' and p.suffix == '.png'
         keep |= name in {'assets/fonts/Bungee-Regular.ttf', 'assets/fonts/OFL.txt'}
         keep |= source and rel.parts[0] in {'docs', 'tests', 'tools'} and p.suffix in {'.md', '.txt', '.lua', '.py'}

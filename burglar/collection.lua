@@ -1,6 +1,7 @@
 -- Build only the Joker Collection from the run's immutable availability pool.
 -- Native collection pagination retains this local list; shop/global pools stay intact.
 local M={sort=1,sorts={'Collection order','Draft order','Name','Rarity'}}
+local function base(key) return key:match('^(j_[%w_]+)#%d+$') or key end
 local function roster()
     if not (G and G.STAGES and G.STAGE==G.STAGES.RUN and G.GAME) then return end
     local pool=G.GAME.draftout_pool
@@ -23,7 +24,7 @@ end
 local function sort_list(list,keys)
     if M.sort==1 then return end
     local positions,names={},{}
-    for i,key in ipairs(keys) do positions[key]=i end
+    for i,key in ipairs(keys) do positions[base(key)]=positions[base(key)] or i end
     for _,center in ipairs(list) do
         names[center.key]=tostring(localize({type='name_text',set='Joker',key=center.key})):lower()
     end
@@ -46,9 +47,9 @@ function M.install()
         if not keys then return original(...) end
         if M.pool~=G.GAME.draftout_pool then M.pool,M.sort=G.GAME.draftout_pool,1 end
         local allowed,list={},{}
-        for _,key in ipairs(keys) do allowed[key]=true end
+        for _,key in ipairs(keys) do allowed[base(key)]=(allowed[base(key)] or 0)+1 end
         for _,center in ipairs(G.P_CENTER_POOLS.Joker) do
-            if allowed[center.key] then list[#list+1]=center end
+            for _=1,allowed[center.key] or 0 do list[#list+1]=center end
         end
         sort_list(list,keys)
         -- A mod's config menu can leave Collection filtering active. The team

@@ -11,6 +11,14 @@ local function add_chunk(out,index,value)
     end
 end
 local function chunks(score)
+    if type(score)=='string' then
+        local power=score:match('^([%d.]+),1$')
+        if power then
+            power=tonumber(power)
+            local exponent=math.floor(power)
+            score={coeffiocient=10^(power-exponent),exponent=exponent,e_count=0}
+        end
+    end
     local c,e,layers
     if type(score)=='table' then c,e,layers=score.coeffiocient,score.exponent,score.e_count
     else c,e,layers=score,0,0 end

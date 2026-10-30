@@ -37,6 +37,21 @@ return function(D)
         for key in pairs(P.active and P.active.selected or {}) do keys[#keys+1] = key end
         table.sort(keys); return keys
     end
+    function P.toggle(a,key)
+        a.selection_order=a.selection_order or {}
+        if a.selected[key] then
+            a.selected[key]=nil
+            for i,v in ipairs(a.selection_order) do
+                if v==key then table.remove(a.selection_order,i);break end
+            end
+        else
+            if #a.selection_order>=a.needed then
+                a.selected[table.remove(a.selection_order,1)]=nil
+            end
+            a.selected[key]=true
+            a.selection_order[#a.selection_order+1]=key
+        end
+    end
     function P.confirmed()
         sound('cardSlide2')
     end
@@ -46,7 +61,7 @@ return function(D)
         }}
     end
     function P.grid(keys, options)
-        local o, rows = options or {}, {}
+        local o, rows, previews = options or {}, {}, {}
         local scale, per_row = o.scale or 0.61, o.per_row or 7
         local slots=math.max(#keys,o.slots or 0)
         local row_ranges={}
@@ -80,9 +95,10 @@ return function(D)
                 -- of the preceding row. This only changes Burglar previews.
                 area.align_cards = align_preview
                 local card = Card(area.T.x,area.T.y,G.CARD_W*scale,G.CARD_H*scale,nil,
-                    assert(G.P_CENTERS[key],'Missing Joker: '..key),
+                    assert(G.P_CENTERS[core.key(key)],'Missing Joker: '..key),
                     {bypass_discovery_center=true,bypass_discovery_ui=true,bypass_lock=true})
                 card.draftout_tray=o.tray or o.roster
+                previews[#previews+1]={key=key,card=card}
                 card.states.drag.can = false
                 -- Menu previews must never rely on the run's flip state machine.
                 card.facing,card.sprite_facing,card.flipping = 'front','front',nil
@@ -116,11 +132,14 @@ return function(D)
                     if not self.draftout_revealed then return end
                     if o.on_slot_click then o.on_slot_click((o.slot_offset or 0)+index);return end
                     if not o.choose or not o.choose(key) then return end
-                    self.draftout_selected = not not o.selected[key]
-                    if self.children and self.children.draftout_selection_caret then
-                        self.children.draftout_selection_caret.states.visible=self.draftout_selected
+                    for _,preview in ipairs(previews) do
+                        local c=preview.card
+                        c.draftout_selected=not not o.selected[preview.key]
+                        if c.children and c.children.draftout_selection_caret then
+                            c.children.draftout_selection_caret.states.visible=c.draftout_selected
+                        end
+                        c.area:align_cards()
                     end
-                    self.area:align_cards()
                     self:juice_up(0.1,0.05)
                 end
                 if o.pop then card:juice_up(0.12,0.03) end
@@ -200,9 +219,7 @@ return function(D)
             local grid=P.grid(keys,{scale=0.74,per_row=5,slots=10,center_pack_rows=true,
                 pop=pop,deal_start=a.deal_started,selected=a.selected,choose=function(key)
                 if P.active~=a or a.pending then return false end
-                if a.selected[key] then a.selected[key]=nil
-                elseif #P.choices()<a.needed then a.selected[key]=true
-                else return false end
+                P.toggle(a,key)
                 a.intent_seq=a.intent_seq+1
                 if o.on_change then o.on_change(P.choices(),core.copy(a.token),a.intent_seq) end
                 return true

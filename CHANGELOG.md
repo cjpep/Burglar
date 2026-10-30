@@ -1,3 +1,44 @@
+# Burglar 0.23.1 — Draft setup layout fix
+
+- Keep the draft settings inside a row so local development and online Open draft menus stack their controls vertically and center them inside the panel.
+- Fix the pool selector pushing player count, timer, action and Back buttons to the right or outside the panel.
+- No gameplay, duplicate-copy, scoring or multiplayer connection changes.
+
+# Burglar 0.23.0 — Duplicate cubes and Multiplayer 1.0.4
+
+- Custom JSON cubes can repeat Joker IDs. Each copy is independently drafted, displayed, passed and saved; players may draft the same Joker from different copies.
+- In duplicate-enabled cubes, new Joker availability follows each player's drafted copy count. Owned cards and shop/pack offers reserve copies; selling frees them again.
+- Apply copy limits to shops, Buffoon packs, Judgment and Riff-Raff. Exhausted shop/pack Joker slots use a Tarot fallback. Wraith, Soul and copying effects retain their exceptions; Default drafts retain prior behavior.
+- Preserve copy identities through roster sorting, Collection, recap, saved-roster 1v1s and host checkpoints.
+- Update compatibility to MultiplayerAPI/PvP 1.0.4 score text and host checkpoint formats. Burglar continues using its own scoped round recovery; ordinary PvP retains native synchronization.
+- Keep average scoring for three/four survivors and native head-to-head scoring for two.
+- Everyone must update Burglar and use matching Multiplayer versions. Automated checks use the uploaded 1.0.4 sources; live Windows playtesting remains necessary.
+
+# Burglar 0.22.1 — Simpler pool selector
+
+- Removed the Commons-only preset. Draft pool now cycles through Default and custom JSON files only.
+- Existing Commons-only settings return to Default. Custom JSON pools remain unchanged.
+- Updated the cube guide. No gameplay or network protocol changes.
+
+# Burglar 0.22.0 — Custom draft pools
+
+- Click another Joker to replace a full selection; pick-two mode replaces the oldest selected card. Clicking a selected card still deselects it. Confirmation and timeout intent tracking remain in place.
+- Added a Draft pool selector: Default, Commons only, and custom JSON files from the cubes folder.
+- Host shares the selected list with every client; guests validate it without needing the file. Prepared drafts retain their original list.
+- Reject invalid JSON, duplicates, excluded/missing Joker IDs, and pools too small for the selected player/pack counts.
+- Included a complete example JSON and editing guide. Custom pools use eligible vanilla Jokers; duplicate/spawn-block behavior is unchanged.
+- Includes v0.21.2 PvP recovery. Everyone must use the same version.
+
+# Burglar 0.21.2 — PvP recovery
+
+- Retry unacknowledged match reports every three seconds using their original run/round tags and sequence numbers.
+- Recover missed PvP results from the host checkpoint, including life totals, eliminations, and the winner. Retain the terminal transaction across later ante/ready updates and host handovers.
+- Keep original outcome IDs so repeated recovery cannot resolve the round or deduct a life twice. Ignore checkpoints from another run, host authority, or ante.
+- Check for a missed result before processing the match-ended notification.
+- Preserve the existing ready/start retry, average scoring with three or four survivors, and native 1v1 endgame.
+- Everyone must use 0.21.2 together; the draft compatibility check rejects older builds.
+- Validated with the supplied MultiplayerAPI/PvP 1.0.3 code and simulated message loss. Official-server playtesting remains necessary; this cannot repair a broken game animation or a complete disconnection.
+
 # Burglar 0.21.1 — Multiplayer 1.0.3 compatibility
 
 - Updated requirements to MultiplayerAPI/PvP >= 1.0.3 and Lovely >= 0.10.0.

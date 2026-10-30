@@ -54,7 +54,7 @@ local allowed_keys={}
 for _,key in ipairs(vanilla_keys) do allowed_keys[key]=true end
 local function current_pool(pool)
     if not pool or pool.draft_schema~=core.SCHEMA or type(pool.keys)~='table' then return false end
-    for _,key in ipairs(pool.keys) do if not allowed_keys[key] then return false end end
+    for _,key in ipairs(pool.keys) do if not allowed_keys[core.key(key)] then return false end end
     return true
 end
 if mod.config.session and mod.config.session.schema~=core.SCHEMA then
@@ -72,7 +72,7 @@ local function save()
 end
 
 local function name(key)
-    return localize({type = "name_text", set = "Joker", key = key})
+    return localize({type = "name_text", set = "Joker", key = core.key(key)})
 end
 D.joker_name = name
 
@@ -90,6 +90,8 @@ function D.catalog()
     return keys
 end
 
+assert(SMODS.load_file('burglar/cubes.lua',mod.id))()(D)
+
 function D.fresh_seed()
     local seed = fresh_seed(mod.config, love.math.random)
     save()
@@ -99,7 +101,10 @@ end
 function D.start(seed)
     local options=D.draft_options()
     options.seed=seed or D.fresh_seed()
-    local s = core.new(D.catalog(), options)
+    local keys,cube_name=D.cubes.selected()
+    D.cubes.capacity(keys,options)
+    local s = core.new(keys, options)
+    s.cube_name=cube_name
     mod.config.session, mod.config.armed_seat = s, false
     if D.pack_ui then D.pack_ui.reset_session() end
     s.timer_setting = D.clock.setting(mod.config.pick_seconds)
@@ -116,7 +121,7 @@ end
 function D.arm(seat)
     local pool = core.export_pool(assert(mod.config.session, "No draft"), seat)
     assert(current_pool(pool),'Saved roster uses an older Joker pool. Start a fresh draft.')
-    for _, key in ipairs(pool.keys) do assert(G.P_CENTERS[key], "Missing Joker: " .. key) end
+    for _, key in ipairs(pool.keys) do assert(G.P_CENTERS[core.key(key)], "Missing Joker: " .. key) end
     mod.config.armed_seat = seat
     save()
     D.message = "Seat " .. seat .. " armed for future new runs."
@@ -156,41 +161,52 @@ local function drafted_joker_available(game,key)
         and not (key=='j_gros_michel' and (game.pool_flags or {}).gros_michel_extinct)
 end
 
-function D.shop_key(pool, forced_key, rarity)
-    local game = G.GAME
+local copies=assert(SMODS.load_file('burglar/copy_pool.lua',mod.id))()(D)
+D.copy_pool=copies
+local function pool_candidates(pool)
+    local keys,seen={},{}
+    for _,id in ipairs(pool.keys) do
+        local key=core.key(id)
+        if not seen[key] then keys[#keys+1]=key;seen[key]=true end
+    end
+    local limits,used
+    if pool.copy_limits then limits,used=copies.counts(G.GAME.draftout_pool or pool) end
     local function available(key)
-        return drafted_joker_available(game,key)
+        return drafted_joker_available(G.GAME,key)
+            and (not limits or (used[key] or 0)<(limits[key] or 0))
     end
-    if forced_key and has_key(pool.keys, forced_key) and available(forced_key) then
-        return forced_key
-    end
+    return keys,available
+end
+function D.has_available(pool)
+    local keys,available=pool_candidates(pool)
+    for _,key in ipairs(keys) do if available(key) then return true end end
+    return false
+end
+function D.shop_key(pool, forced_key, rarity)
+    local game=G.GAME
+    local keys,available=pool_candidates(pool)
+    if forced_key and has_key(keys,forced_key) and available(forced_key) then return forced_key end
     local function eligible(key)
-        return available(key) and (not (game.used_jokers or {})[key] or SMODS.showman(key))
+        return available(key) and (pool.copy_limits or not (game.used_jokers or {})[key] or SMODS.showman(key))
     end
     local preferred
-    if type(rarity) == "number" then
-        -- create_card's numeric rarity is a vanilla roll threshold, not an index.
-        preferred = rarity > 0.95 and 3 or rarity > 0.7 and 2 or 1
-    else preferred = ({Common = 1, Uncommon = 2, Rare = 3})[rarity] end
-    local weights = {
-        0.7 * (game.common_mod or 1),
-        0.25 * (game.uncommon_mod or 1),
-        0.05 * (game.rare_mod or 1),
-    }
-    local function roll() return pseudorandom("draftout_shop") end
-    local key = core.sample(pool.keys, G.P_CENTERS, eligible, roll, weights, preferred)
-    -- Exhaustion policy: allow a drafted duplicate rather than leak an off-pool Joker.
-    if not key then key = core.sample(pool.keys, G.P_CENTERS, available, roll, nil, preferred) end
-    assert(key, "Burglar: no drafted Jokers remain available; check bans and installed mods.")
+    if type(rarity)=='number' then preferred=rarity>0.95 and 3 or rarity>0.7 and 2 or 1
+    else preferred=({Common=1,Uncommon=2,Rare=3})[rarity] end
+    local weights={0.7*(game.common_mod or 1),0.25*(game.uncommon_mod or 1),0.05*(game.rare_mod or 1)}
+    local function roll() return pseudorandom('draftout_shop') end
+    local key=core.sample(keys,G.P_CENTERS,eligible,roll,weights,preferred)
+    if not key and not pool.copy_limits then key=core.sample(keys,G.P_CENTERS,available,roll,nil,preferred) end
+    if pool.copy_limits then return key end
+    assert(key,'Burglar: no drafted Jokers remain available; check bans and installed mods.')
     return key
 end
 
 function D.common_keys(pool)
     local keys = {}
     for _, key in ipairs(pool.keys) do
-        local c = G.P_CENTERS[key]
+        local c = G.P_CENTERS[core.key(key)]
         if c and (c.rarity == 1 or c.rarity == "Common")
-            and drafted_joker_available(G.GAME,key) then keys[#keys + 1] = key end
+            and drafted_joker_available(G.GAME,core.key(key)) then keys[#keys + 1] = key end
     end
     return keys
 end
@@ -215,10 +231,10 @@ function create_card(set, area, legendary, rarity, skip_materialize, soulable, f
     if pool and set == "Joker" and generated then
         local source_pool = pool
         if append == "rif" then
-            source_pool = {keys = D.common_keys(pool)}
+            source_pool = {keys = D.common_keys(pool),copy_limits=pool.copy_limits}
             assert(#source_pool.keys > 0, "Burglar: Riff-Raff has no drafted Common; generation trigger should have been skipped.")
         end
-        forced_key = D.shop_key(source_pool, nil, append == "rif" and 0 or nil)
+        forced_key = D.shop_key(source_pool, forced_key, append == "rif" and 0 or nil)
         legendary, soulable = nil, false
     elseif pool and set == "Joker" and append == "buf" then
         forced_key = D.shop_key(pool, forced_key, rarity)
@@ -227,8 +243,14 @@ function create_card(set, area, legendary, rarity, skip_materialize, soulable, f
         forced_key = D.shop_key(pool, forced_key, rarity)
         legendary, soulable = nil, false
     end
-    return create_card_ref(set, area, legendary, rarity, skip_materialize, soulable, forced_key, append)
+    if pool and pool.copy_limits and set=='Joker' and not forced_key
+        and (append=='buf' or area==G.shop_jokers) then
+        -- Never exceed a copy cap on exhaustion. Non-Joker shop/pack fallback.
+        set,legendary,rarity,soulable='Tarot',nil,nil,false
+    end
+    return copies.track(create_card_ref(set, area, legendary, rarity, skip_materialize, soulable, forced_key, append),area)
 end
+copies.install()
 
 local function line(text, scale)
     return {n = G.UIT.R, config = {align = "cm", padding = 0.03}, nodes = {
@@ -414,6 +436,7 @@ if mod.config.diagnostics then diagnostics.set_enabled(true) end
 D.settings_ui={timer='',effects='',picks='',packs='',alerts='',players='',diagnostics=''}
 local function settings_labels()
     local options=D.draft_options()
+    D.settings_ui.cube='Draft pool: '..D.cubes.label()
     D.settings_ui.players='Local draft: '..options.player_count..' players'
     D.settings_ui.picks='Pick '..options.picks_per_turn..' per turn'
     D.settings_ui.packs=options.packs_per_player..' packs each ('..core.roster_size(options.packs_per_player)..' Jokers)'
@@ -432,7 +455,11 @@ local function settings_button(field,action,width)
     return b
 end
 function D.draft_settings()
-    return row({settings_button('picks','draftout_picks_cycle',3.2),settings_button('packs','draftout_packs_cycle',4.2)})
+    -- Keep one row in the parent menu's vertical stack. A bare column here
+    -- makes Balatro place the following controls beside the settings block.
+    return row({{n=G.UIT.C,config={align='cm',padding=0.03},nodes={
+        row({settings_button('cube','draftout_cube_cycle',7.4)}),
+        row({settings_button('picks','draftout_picks_cycle',3.2),settings_button('packs','draftout_packs_cycle',4.2)})}}})
 end
 local function can_change_draft_settings()
     local b=D.mpbridge
@@ -441,6 +468,23 @@ local function can_change_draft_settings()
         return l and l.is_host and not l:is_game_started() and b and (b.phase=='checking' or b.phase=='idle' or b.phase=='error')
     end
     return not mod.config.session or D.local_launcher or mod.config.session.done
+end
+G.FUNCS.draftout_cube_cycle=function()
+    if not can_change_draft_settings() then return end
+    local choices=D.cubes.choices()
+    local current=mod.config.draft_cube or 'default'
+    local next_id=choices[1]
+    for i,id in ipairs(choices) do if id==current then next_id=choices[i%#choices+1];break end end
+    mod.config.draft_cube=next_id
+    local ok,keys=pcall(D.cubes.selected)
+    D.message=ok and (D.cubes.label()..': '..#keys..' eligible Jokers. Use fewer packs for smaller pools.') or tostring(keys)
+    settings_labels();save()
+    if D.mode=='mp' and D.mpbridge then D.mpbridge.message=D.message end
+    if D.mode=='mp' and D.mpbridge and D.mpbridge.phase=='checking' then
+        local checked,err=pcall(D.mpbridge.begin)
+        if not checked then D.mpbridge.reset();D.message=tostring(err);D.mpbridge.message=D.message end
+    end
+    show()
 end
 function D.player_button()
     return settings_button('players','draftout_players_cycle',4)

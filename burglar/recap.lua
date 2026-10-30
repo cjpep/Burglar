@@ -214,7 +214,7 @@ return function(D)
     G.FUNCS.draftout_recap_open=function() if R.available() then open(C.last_recap,false) end end
     G.FUNCS.draftout_recap_local=function()
         local s=C.session
-        if s and s.done and s.schema==core.SCHEMA then open(R.make(s,D.catalog(),{}),true) end
+        if s and s.done and s.schema==core.SCHEMA then open(R.make(s,s.catalog or D.catalog(),{}),true) end
     end
     G.FUNCS.draftout_recap_close=function() R.open=false;R.view=nil;U.show() end
     G.FUNCS.draftout_recap_tab=function(e)
@@ -237,7 +237,7 @@ return function(D)
         nodes[#nodes+1]=U.row(tabs)
         local player=R.tab<=#data.players and data.players[R.tab]
         local keys=player and player.keys or data.omitted
-        nodes[#nodes+1]=U.line((player and player.name or 'Not drafted')..' - '..#keys..' Joker types',0.28)
+        nodes[#nodes+1]=U.line((player and player.name or 'Not drafted')..' - '..#keys..' Jokers',0.28)
         local pages=math.max(1,math.ceil(#keys/12));R.page=math.max(1,math.min(R.page,pages))
         local shown,labels,all_labels={},{},{}
         if player and R.order then

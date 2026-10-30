@@ -6,7 +6,7 @@ Burglar brings Magic: The Gathering-style drafting to Balatro multiplayer. Befor
 
 You don't get those Jokers immediately—you still have to find and buy them. The draft gives you a plan, and the run is where you find out whether it was a good one.
 
-Made by **cjpep**, based on **Fantom_Balatro's original idea**. A lot of the changes came from playing it with friends and figuring out what worked.
+Made by **Cjpep**, based on **Fantom_Balatro's original idea**. A lot of the changes came from playing it with friends and figuring out what worked.
 
 ## Downloads
 
@@ -14,8 +14,8 @@ Get a player ZIP from this repository's **Releases** page:
 
 | Edition | What you get |
 | --- | --- |
-| **Burglar v0.21.1 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
-| **Burglar v0.21.1 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
+| **Burglar v0.23.1 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
+| **Burglar v0.23.1 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
 
 Install **one edition only**. Everyone in the lobby should use the same version and edition. Switch editions between matches by replacing the entire Burglar folder. The GitHub source includes spectating; use a release download for Standard.
 
@@ -23,8 +23,8 @@ Install **one edition only**. Everyone in the lobby should use the same version 
 
 - Balatro. The development baseline is **1.0.1o** on Windows.
 - **Steamodded 1.0.0-beta-1814a or later**.
-- **Lovely 0.10.0 or later**. Multiplayer 1.0.3 requires this newer minimum.
-- **MultiplayerAPI** and **MultiplayerPvP**, both **1.0.3 or later**. This release was checked against 1.0.3; later releases may need another compatibility review.
+- **Lovely 0.10.0 or later**. Multiplayer 1.0.4 requires this newer minimum.
+- **MultiplayerAPI** and **MultiplayerPvP**, both **1.0.4 or later**. This release was checked against 1.0.4; later releases may need another compatibility review.
 
 MultiplayerSpeedrunning is optional. Remove the old Multiplayer and MultiplayerExperimental mods from active Mods. These downloads don't include Balatro, Lovely DLLs, or the multiplayer dependencies.
 
@@ -98,7 +98,7 @@ This is a reconstructed view from game snapshots, not a screen share or full rep
 
 For a scripted preview: **Mods → Burglar → Config → Local spectator preview**. It demonstrates the layout, not a live connection.
 
-## Tournament Mode: draft once, play separate 1v1s, winners face each other. 
+## Optional: draft once, play separate 1v1s
 
 After a four-player draft, each player opens **Save roster / bracket 1v1 → Save latest draft roster**. Leave the draft lobby and make separate private **Nemesis** lobbies. Both players must open **Saved-roster 1v1 / bracket → Enable for this lobby**.
 
@@ -112,10 +112,9 @@ For more detail, turn on **Mods → Burglar → Config → Diagnostics**, reprod
 
 ## Credits
 
-- **Cjpep** — development and implementation (kappa).
+- **Cjpep** — development and implementation.
 - **Fantom_Balatro** — the original idea for bringing a Magic-style Joker draft to Balatro. Burglar started with his concept.
 - **NightmareBalatro, AustereGenie388, PatientEscape38, and UnseenExplosion** — playtesting, feedback, and helping find the things that broke.
-- **GPT-6 Astra** — Made literally all of this.
 
 Thanks to the developers of **MultiplayerAPI, MultiplayerPvP, Steamodded, and Lovely** for the tools this runs on. The draft takes inspiration from **Magic: The Gathering**; the runs are still very much Balatro.
 
@@ -126,3 +125,9 @@ The code uses the MIT license. The bundled Bungee font retains its license in `a
 Run `python tools/build_release.py` from a source checkout to build both player editions and the source ZIP. The source bundle includes a release guide and validation notes in `docs/`.
 
 The public name, install folder, manifest filename, and module folder are **Burglar**. Internal `Draftout`/`draftout` identifiers remain where used by saves, asset keys, callbacks, and multiplayer messages. They are intentional; renaming them isn't necessary to install or play.
+
+## Custom draft pools
+
+Use **Draft pool** in draft setup to choose Default or a custom JSON file in `Burglar/cubes`. Only the online host needs the file. See [the cube guide](cubes/README.md) and the included example. Smaller pools need fewer packs; excluded or unavailable Jokers are rejected; repeat a Joker ID to include multiple copies.
+
+Selecting another Joker now replaces an existing selection without a separate deselect click. In pick-two mode, it replaces the oldest selected Joker. Confirm selection still locks in the pick.

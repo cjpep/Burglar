@@ -27,6 +27,7 @@ D.ui.button=function(label,action,data,w)return {n=G.UIT.C,config={button=action
 local redraw=0
 D.ui.show=function() redraw=redraw+1 end
 D.core.direction=function()return 1 end
+D.core.key=assert(loadfile(root..'core.lua'))().key
 assert(loadfile(root..'pack_ui.lua'))()(D)
 assert(loadfile(root..'draft_views.lua'))()(D)
 local function collect(node,predicate,found)
@@ -152,3 +153,24 @@ for _,case in ipairs({{9,{9}},{18,{15,3}},{27,{15,12}},{35,{15,12,8}}}) do
  assert(last==capacity,'every roster slot appears exactly once')
 end
 print('UI redesign offline tests passed')
+
+-- A full selection replaces the oldest pick, without submitting the turn.
+local a={selected={},needed=1}
+D.pack_ui.toggle(a,'a');D.pack_ui.toggle(a,'b')
+assert(not a.selected.a and a.selected.b)
+D.pack_ui.toggle(a,'b');assert(next(a.selected)==nil)
+a={selected={},needed=2}
+D.pack_ui.toggle(a,'a');D.pack_ui.toggle(a,'b');D.pack_ui.toggle(a,'c')
+assert(not a.selected.a and a.selected.b and a.selected.c)
+D.pack_ui.toggle(a,'b');D.pack_ui.toggle(a,'d');D.pack_ui.toggle(a,'a')
+assert(a.selected.d and a.selected.a and not a.selected.c)
+-- Replacing a selection lowers the old card as well as raising the new one.
+local picks={selected={},needed=1}
+local grid=D.pack_ui.grid({'a','b'},{selected=picks.selected,choose=function(key)
+ D.pack_ui.toggle(picks,key);return true
+end})
+local card_nodes=collect(grid,function(n)return n.n==G.UIT.O and n.config.object and n.config.object.cards end)
+local first,second=card_nodes[1].config.object.cards[1],card_nodes[2].config.object.cards[1]
+first:click();assert(first.draftout_selected)
+second:click();assert(not first.draftout_selected and second.draftout_selected)
+assert(first.T.y>second.T.y,'Replaced card must return to its resting height')
