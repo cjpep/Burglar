@@ -1,4 +1,4 @@
-# Installing Burglar 0.26.0
+# Installing Burglar 0.26.1
 
 Choose one player download: **Standard** (no spectator code) or **Spectator** (experimental viewer included). Use the same version and edition as your friends.
 
@@ -9,7 +9,7 @@ Choose one player download: **Standard** (no spectator code) or **Spectator** (e
 5. Check that `Mods\Burglar\Burglar.json` exists. Avoid a nested Burglar\Burglar folder.
 6. Launch Balatro. Requires Steamodded >= beta-1814a, Lovely >= 0.10.0, MultiplayerAPI >= 1.0.4, and MultiplayerPvP >= 1.0.4. This release was checked against Multiplayer 1.0.4.
 
-Create a private Burglar lobby through Multiplayer PvP. Gather two or four players, click Open draft, then let the host choose settings and Start drafting. After the draft, return to the lobby, ready up, and Start Game.
+Create a private Burglar lobby through Multiplayer PvP. Gather two, three, or four players, click Open draft, then let the host choose settings and Start drafting. After the draft, return to the lobby, ready up, and Start Game.
 
 Optional: enable **Open deck lists** before drafting to review everyone's completed rosters before the run. The new default timer is **Scaling: 5s per Joker**; saved timer preferences are preserved.
 

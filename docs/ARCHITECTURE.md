@@ -1,6 +1,6 @@
 ## Two-player support (v0.18.0)
 
-The draft state carries `player_count` (2 or 4). Missing values default to 4 for
+The draft state carries `player_count` (2, 3, or 4). Missing values default to 4 for
 existing saved local drafts. Online count comes from the checked roster, never
 from the local test preference. Rules handshake 16 prevents mixed clients.
 Recap assembly uses the original seat count even after departures, including

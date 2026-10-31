@@ -47,7 +47,7 @@ function D.draft_options()
     local rounds,picks=mod.config.packs_per_player,mod.config.picks_per_turn
     if type(rounds)~='number' or rounds~=math.floor(rounds) or rounds<1 or rounds>4 then rounds=3 end
     if picks~=1 and picks~=2 then picks=1 end
-    return {pack_size=9,packs_per_player=rounds,picks_per_turn=picks,player_count=mod.config.local_players==2 and 2 or 4,open_deck_lists=mod.config.open_deck_lists==true}
+    return {pack_size=9,packs_per_player=rounds,picks_per_turn=picks,player_count=(mod.config.local_players==2 or mod.config.local_players==3) and mod.config.local_players or 4,open_deck_lists=mod.config.open_deck_lists==true}
 end
 -- A rules update invalidates old draft configurations, not existing run saves.
 local allowed_keys={}
@@ -507,7 +507,7 @@ function D.player_button()
 end
 G.FUNCS.draftout_players_cycle=function()
     if D.mode=='mp' or not can_change_draft_settings() then return end
-    mod.config.local_players=D.draft_options().player_count==2 and 4 or 2
+    mod.config.local_players=D.draft_options().player_count==4 and 2 or D.draft_options().player_count+1
     settings_labels();save()
 end
 G.FUNCS.draftout_picks_cycle=function()

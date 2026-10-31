@@ -38,7 +38,7 @@ return function(D)
                     bg_colour=mix_colours(colour,G.C.BLACK,0.3),outline_colour=colour}),
                 description=MPAPI.ui_pillar_description_box({
                     lines={'Draft your Jokers','Build your shop pool'},minh=1.3}),
-                stat_box=MPAPI.ui_pillar_stat_box({label='Players',value='2 or 4',value_colour=G.C.MONEY}),
+                stat_box=MPAPI.ui_pillar_stat_box({label='Players',value='2 to 4',value_colour=G.C.MONEY}),
             }}})
             table.insert(row.nodes,1,added.row_node.nodes[1])
             local dispose=page.dispose

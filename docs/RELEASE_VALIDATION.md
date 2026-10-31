@@ -1,3 +1,7 @@
+# Burglar 0.26.1
+
+No gameplay tests or automated test suites were run for this update, as requested. Three-player online play has not been playtested. The prior release results below apply to 0.26.0 only.
+
 # Burglar 0.26.0 — validation and remaining live checks
 
 - 114 targeted Python integration tests: 112 passed, two existing skips for inapplicable reference cases. Includes tournament, stake flags, saved-roster native duels, picker, MPAPI long matches, custom cubes and native balanced rarity tags.

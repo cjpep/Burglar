@@ -53,7 +53,7 @@ function M.new(keys, options)
     local o = options or {}
     local size, rounds = o.pack_size or 9, o.packs_per_player or 3
     local players = o.player_count or 4
-    assert(players == 2 or players == 4, "Drafts require two or four players")
+    assert(integer(players, 2, 4), "Drafts require two, three, or four players")
     local picks = o.picks_per_turn or 1
     assert(integer(picks, 1, 2), "picks_per_turn must be 1 or 2")
     assert(integer(size, 1, 30), "pack_size must be an integer from 1 to 30")

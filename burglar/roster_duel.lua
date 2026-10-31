@@ -13,7 +13,7 @@ return function(D)
         assert(type(data)=='table' and data.schema==1,'Unsupported roster code')
         assert(type(data.event)=='string' and #data.event>=8 and #data.event<=64
             and data.event:match('^[%w-]+$'),'Invalid draft identifier')
-        assert(data.players==2 or data.players==4,'Roster needs two or four original draft seats')
+        assert(integer(data.players,2,4),'Roster needs two, three, or four original draft seats')
         assert(integer(data.seat,1,data.players) and integer(data.rounds,1,4),'Invalid roster seat or pack count')
         assert(type(data.keys)=='table' and #data.keys==core.roster_size(data.rounds),'Incomplete roster')
         local keys,seen={},{}

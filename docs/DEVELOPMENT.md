@@ -1,4 +1,4 @@
-> Current release: 0.26.0. See RELEASING.md for the two editions and RELEASE_VALIDATION.md for the packaging checks. SPECTATOR_PROTOTYPE.md documents the experimental viewer.
+> Current release: 0.26.1. See RELEASING.md for the two editions and RELEASE_VALIDATION.md for the packaging checks. SPECTATOR_PROTOTYPE.md documents the experimental viewer.
 
 # Development and release checks
 
@@ -90,7 +90,7 @@ registries, private lobby flow, or third-party source files are replaced.
 
 The callback resolves the current native Royale create handler at click time.
 Burglar continues using its existing private pvp_royale integration, not a newly
-registered server mode. The count describes supported draft sizes (2 or 4);
+registered server mode. The count describes supported draft sizes (2, 3, or 4);
 the native lobby capacity is unchanged. F8 still opens setup.
 
 ## Shared settings and lobby access (0.20.6)

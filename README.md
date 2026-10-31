@@ -1,6 +1,6 @@
 # Burglar
 
-**A two- or four-player Joker draft for Balatro.**
+**A two- to four-player Joker draft for Balatro.**
 
 Burglar brings Magic: The Gathering-style drafting to Balatro multiplayer. Before the run, you and your friends open packs of Jokers, pick what you want, and pass the rest around the table. The Jokers you draft become your personal shop pool for that match.
 
@@ -14,8 +14,8 @@ Get a player ZIP from this repository's **Releases** page:
 
 | Edition | What you get |
 | --- | --- |
-| **Burglar v0.26.0 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
-| **Burglar v0.26.0 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
+| **Burglar v0.26.1 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
+| **Burglar v0.26.1 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
 
 Install **one edition only**. Everyone in the lobby should use the same version and edition. Switch editions between matches by replacing the entire Burglar folder. The GitHub source includes spectating; use a release download for Standard.
 
@@ -42,7 +42,7 @@ Replace the whole folder when updating or changing editions. Don't merge edition
 ## Start a match
 
 1. Open **Multiplayer PvP → Create Lobby → Burglar → CREATE**.
-2. Share the lobby code. Burglar supports **two or four players**.
+2. Share the lobby code. Burglar supports **two, three, or four players**.
 3. The host clicks the **deck/stake button below Open draft** to use PvP's native deck picker. Choose balance rules under **Lobby Options**.
 4. Everyone clicks **Open draft**. The host's button prepares the draft; if preparation hasn't started, use **Prepare draft** inside the draft screen.
 5. The host chooses the draft settings, waits for all players to connect to the draft, then clicks **Start drafting**. Allow the initial two-second connection check to finish.
@@ -91,13 +91,13 @@ Getting a Joker through Wraith, The Soul, or the Jimbo fallback doesn't add it t
 
 ## Try the draft by yourself
 
-Open **Mods → Burglar → Config → Local development draft**. Choose two or four seats and start a draft. You control each seat in turn, so you can try the picks, pack passing, timers, and roster controls without getting a group together.
+Open **Mods → Burglar → Config → Local development draft**. Choose two, three, or four seats and start a draft. You control each seat in turn, so you can try the picks, pack passing, timers, and roster controls without getting a group together.
 
 Afterward, you can assign a seat's pool to a **new normal run outside multiplayer lobbies**. Use **Disarm future runs** when you're finished testing so future solo runs return to normal. This mode doesn't test online connections or multiplayer scoring.
 
 ## Spectating — Spectator edition only
 
-After losing all your lives in a four-player match, **stay in the lobby** and click **Watch remaining players** on the results screen. **F9** is also a shortcut. Choose a survivor with the Previous/Next controls.
+After losing all your lives in a three- or four-player match, **stay in the lobby** and click **Watch remaining players** on the results screen. **F9** is also a shortcut. Choose a survivor with the Previous/Next controls.
 
 The feed starts at a shop or blind-selection checkpoint and uses a delay of at least five seconds. It shows the watched player's board, hand, shop offers, packs, and changing card areas. Survivors don't have to press anything.
 

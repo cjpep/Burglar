@@ -1,9 +1,9 @@
--- Private two/four-player Royale integration for MPAPI + MultiplayerPvP 1.0.0.
+-- Private two-to-four-player Royale integration for MPAPI + MultiplayerPvP 1.0.0.
 -- The lobby host owns the draft; MPAPI carries directed actions with sender IDs.
 return function(D)
     if not (MPAPI and PVP and PVP.id == 'MultiplayerPvP') then return end
     local C, core, U = D.mod.config, D.core, D.ui
-    local RULES = 22
+    local RULES = 23
     local B = {phase = 'idle', serial = 0, attached = true, failed_sessions = {}}
     D.mpbridge = B
     local recap=D.recap or assert(SMODS.load_file('burglar/recap.lua',D.mod.id))()(D)
@@ -46,7 +46,7 @@ return function(D)
         T.attach(l)
         local ids, seen, owner = {}, {}, l.host_id
         local players = l:get_players()
-        assert(#players == 2 or #players == 4, 'Exactly two or four players are required')
+        assert(#players >= 2 and #players <= 4, 'Two, three, or four players are required')
         for _, p in ipairs(players) do
             assert(type(p.id) == 'string' and not p.is_spectator and p.role ~= 'spectator', 'Spectators are not supported')
             assert(not seen[p.id], 'Duplicate lobby player identity')
@@ -412,7 +412,7 @@ return function(D)
                     combat.rounds.handover.change(id)
                 else
                     combat.stop()
-                    fail('Host changed before the match. Reset the draft with two or four players.')
+                    fail('Host changed before the match. Reset the draft with two, three, or four players.')
                 end
             elseif kind=='metadata_changed' and combat.active() then
                 combat.rounds.handover.observe()
@@ -522,7 +522,7 @@ return function(D)
                 or '4 lives - PvP from Ante 2 - final two play 1v1',0.23)
         end
         if not view or view.done then
-            nodes[#nodes+1] = U.line('Draft Jokers with 2 or 4 players.', 0.25)
+            nodes[#nodes+1] = U.line('Draft Jokers with 2 to 4 players.', 0.25)
         end
         if B.phase == 'checking' and is_host() then
             local count = 0
