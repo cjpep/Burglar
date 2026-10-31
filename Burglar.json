@@ -8,7 +8,7 @@
   "description": "Draft your Jokers. Build your shop pool. Outlast your friends. A two- or four-player Balatro mode inspired by Magic: The Gathering drafts. Original idea by Fantom_Balatro.",
   "prefix": "draftout",
   "main_file": "main.lua",
-  "version": "0.23.1",
+  "version": "0.24.0",
   "priority": 10000001,
   "badge_colour": "7555CC",
   "dependencies": [

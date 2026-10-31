@@ -77,7 +77,7 @@ function M.new(keys, options)
     local s = {
         schema = M.SCHEMA, player_count = players, seed = seed, pack_size = size, rounds = rounds, picks_per_turn = picks, total = minimum,
         round = 1, pick = 1, revision = 0, done = false,
-        catalog=M.copy(keys), copy_limits=M.has_copies(keys),
+        catalog=M.copy(keys), copy_limits=M.has_copies(keys), open_deck_lists=o.open_deck_lists==true,
         packs = {}, current = {}, submitted = {}, pools = {}, history = {},
     }
     for seat=1,players do s.pools[seat],s.history[seat]={},{} end

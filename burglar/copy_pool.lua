@@ -35,13 +35,12 @@ return function(D)
                 and self.ability and self.ability.name=='Riff-raff') then return calc(self,context) end
             if (context.blueprint_card or self).getting_sliced then return end
             local count=math.min(2,G.jokers.config.card_limit-#G.jokers.cards-(G.GAME.joker_buffer or 0))
-            if count<=0 or not D.has_available({keys=D.common_keys(pool),copy_limits=true}) then return end
+            if count<=0 then return end
             G.GAME.joker_buffer=(G.GAME.joker_buffer or 0)+count
             G.E_MANAGER:add_event(Event({func=function()
                 for _=1,count do
                     local source={keys=D.common_keys(pool),copy_limits=true}
                     local k=D.shop_key(source,nil,0)
-                    if not k then break end
                     local card=create_card('Joker',G.jokers,nil,0,nil,false,k,'rif')
                     card:add_to_deck();G.jokers:emplace(card);card:start_materialize()
                 end
@@ -50,14 +49,6 @@ return function(D)
             end}))
             card_eval_status_text(context.blueprint_card or self,'extra',nil,nil,nil,
                 {message=localize('k_plus_joker'),colour=G.C.BLUE})
-        end
-        if Card.can_use_consumeable then
-            local can=Card.can_use_consumeable
-            Card.can_use_consumeable=function(self,...)
-                local pool=G.GAME and G.GAME.draftout_pool
-                if pool and pool.copy_limits and self.ability.name=='Judgement' and not D.has_available(pool) then return false end
-                return can(self,...)
-            end
         end
         if Card.use_consumeable then
             local use=Card.use_consumeable

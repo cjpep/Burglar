@@ -3,10 +3,11 @@
 return function(D)
     if not (MPAPI and PVP and PVP.id == 'MultiplayerPvP') then return end
     local C, core, U = D.mod.config, D.core, D.ui
-    local RULES = 19
+    local RULES = 20
     local B = {phase = 'idle', serial = 0, attached = true, failed_sessions = {}}
     D.mpbridge = B
     local recap=D.recap or assert(SMODS.load_file('burglar/recap.lua',D.mod.id))()(D)
+    local open_lists=D.open_lists or assert(SMODS.load_file('burglar/open_lists.lua',D.mod.id))()(D)
     local cubes=assert(SMODS.load_file('burglar/cubes.lua',D.mod.id))()(D)
     local T, session
     local function lobby() return MPAPI.get_current_lobby() end
@@ -114,6 +115,7 @@ return function(D)
             D.roster_context=nil end
             decks.pending=nil
             recap.open=false
+            open_lists.open=false
         end,
     })
     B.reset=session.reset
@@ -157,6 +159,8 @@ return function(D)
                 roster=rows,timer_mode=B.clock.setting=='scaling' and 'scaling' or 'fixed',timer_seconds=B.clock.seconds,timer_left=D.clock.left(B.clock,now()),timer_paused=B.clock.paused,
                 rounds = s.rounds, pack_size=s.pack_size, picks_per_turn=s.picks_per_turn, total = s.total, seat = i, token = core.token(s, i), picked = not not s.submitted[i],
                 cards = (s.done or s.submitted[i]) and {} or core.copy(s.current[i].cards),
+                open_deck_lists=s.open_deck_lists==true,
+                open_rosters=s.done and s.open_deck_lists and core.copy(s.pools) or nil,
                 drafted = core.copy(s.pools[i])}, id)
         end
     end
@@ -171,6 +175,7 @@ return function(D)
         local options=D.draft_options()
         options.seed=seed
         options.player_count=#B.ids
+        options.open_deck_lists=C.open_deck_lists==true
         cubes.capacity(B.catalog_keys,options)
         B.host_state = core.new(B.catalog_keys, options)
         B.host_state.cube_name=B.cube_name
@@ -330,6 +335,7 @@ return function(D)
                 or #data.cards>9 or #data.drafted>core.roster_size(data.rounds) then return end
             if B.view and (data.rounds~=B.view.rounds or data.picks_per_turn~=B.view.picks_per_turn) then return end
             if data.done and #data.drafted~=core.roster_size(data.rounds) then return end
+            if not open_lists.validate(data,B) then return end
             local old_count=B.view and #B.view.drafted
             if old_count and #data.drafted>old_count and #data.drafted-old_count<=2 then
                 D.pack_ui.confirmed()
@@ -460,6 +466,7 @@ return function(D)
             end
             local on_game_start_ref = assert(PVP.on_game_start, 'PvP 1.0.0 game-start flow missing')
             function PVP.on_game_start(params)
+                open_lists.open=false
                 if D.roster_duel and not D.roster_duel.on_start(params) then return end
                 local run_id=type(params)=='table' and params.run_id
                 local run_identity=run_id and (tostring(run_id)..'|'..tostring(params.seed)..'|'..tostring(not not params.restarted))
@@ -518,6 +525,7 @@ return function(D)
             end
         elseif B.pool then
             nodes[#nodes+1]=D.views.completed(B.pool.keys,'Close this screen and Ready up in the PvP lobby.')
+            if open_lists.available() then nodes[#nodes+1]=U.row({open_lists.button()}) end
             if D.roster_duel then nodes[#nodes+1]=U.row({U.button('Save roster / bracket 1v1','draftout_bracket_open',nil,4)}) end
             if is_host() and B.launch_ready() then
                 nodes[#nodes+1] = U.row({U.button('Start match', 'draftout_mp_start', nil, 5)})

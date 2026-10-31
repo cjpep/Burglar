@@ -1,3 +1,12 @@
+# Burglar 0.24.0 — Open deck lists and Jimbo fallback
+
+- Added **Open deck lists**, an optional draft setup setting, off by default. After the draft is complete and before the match starts, everyone can use **Review all rosters** to browse the other players' picks, including duplicate copies. Picks remain private during the draft.
+- Made **Scaling: 5s per Joker** the default timer. Existing saved timer choices are preserved.
+- Fixed Rare and Uncommon Tag offers falling through to unrelated rarities. They now select an eligible drafted Joker of the promised rarity, or Jimbo when none is available.
+- Replaced the exhausted shop/Buffoon Tarot fallback with **Jimbo (`j_joker`)**. Judgment and Riff-Raff also use Jimbo if their eligible pool is exhausted. Jimbo is an explicit exception to roster ownership and copy limits; the saved roster is unchanged. Normal Joker-space rules still apply.
+- Kept the draft setup controls stacked and centered, with a paginated roster review screen.
+- Updated the multiplayer rules handshake. Everyone in the lobby needs the new Burglar version; use matching editions and Multiplayer versions.
+
 # Burglar 0.23.1 — Draft setup layout fix
 
 - Keep the draft settings inside a row so local development and online Open draft menus stack their controls vertically and center them inside the panel.

@@ -1,16 +1,13 @@
-# Burglar 0.21.1 — release validation
+# Burglar 0.24.0 — release validation
 
-Checked October 29, 2026 against the supplied MultiplayerAPI 1.0.3 and MultiplayerPvP 1.0.3 sources, using Lua 5.1 and a simulated relay. The tests dispatch actual API actions; game rendering is mocked.
+Checked October 31, 2026 against the supplied MultiplayerAPI/PvP 1.0.4 sources, with Lua 5.1, mocked game rendering and a simulated relay.
 
-- Native deck picker: host/guest button layout and permissions, deck/stake publication, balance changes, preservation of completed draft pools, pending-metadata launch blocking, and unchanged unrelated lobbies passed.
-- A twelve-consecutive-PvP match reaches one winner. Final-two-player native 1v1 early finish remains intact. Eliminated-player departures, ready barriers, host handover with native outcome handlers, regular-blind failures, and Ante 1 boss-life loss passed targeted checks.
-- Spectator checks passed for an eliminated host watching through twelve rounds, delayed shop/pack frames, and a viewer that cannot execute or change the watched run.
-- Standard's staged release files passed the actual API draft/start handoff, twelve-round match, next-match draft reset, and all three native-picker checks against 1.0.3.
-- All 33 Standard and 39 Spectator Lua files compile. Both editions pass the main-entry adapter's 3,158 assertions with a mocked game API; the spectator object exists only in Spectator.
-- Three packaging checks passed: one manifest/entry point, preserved save/protocol identity and credits, spectator removal, identical shared gameplay files, reproducible archives, and SHA-256 inventories.
+- Multiplayer/open-list/custom-cube suite: 97 tests, 95 passed and two skipped. The skips cover pre-1.0.3 behavior replaced by the upstream Party API. This includes the existing long-match, final-two native 1v1, stale/duplicate report, ready-barrier and host-handover checks.
+- Open-list tests cover two/four players, four-pack rosters, duplicate copy identities, host-authoritative setup, no opponent-list payloads before completion, malformed/forged view rejection, and review closing at game start or lobby teardown. The match still receives only the player's own drafted pool.
+- The main-entry adapter passes 3,158 assertions with mocked game APIs. Additional Lua checks cover the local review screen, player/page navigation, vertically stacked controls, saved options and the shipped timer default.
+- Duplicate and rarity-tag checks cover owned/offered copies, pending reservations, pack offers, selling, bans, Gros Michel extinction, empty Common pools, Jimbo exhaustion, generator capacity and delayed Judgment creation. Wraith, Soul and ordinary non-Burglar runs keep their scoped exceptions/behavior.
+- The supplied PvP 1.0.4 Rare/Uncommon balanced-tag apply functions execute through Burglar's actual create_card wrapper. They produce the correct available rarity, or Jimbo on copy exhaustion, while retaining native shop UI/materialization and tag consumption. This targeted test passed again after replacing the Tarot fallback.
 
-Standard physically omits all six spectator modules, their loader, config entry, preview button, and receive/event hooks. It is not simply Spectator with a saved setting switched off.
+These are automated simulations, not a Windows Balatro playtest. They do not execute Lovely patching, render the actual UI, or connect to the official server. Native prevention/capacity rules still control whether a card-creation action runs. Spectator remains experimental.
 
-The API harness now loads the supplied native picker, Party/metadata helpers, pending-death helpers, and blind-result action needed by 1.0.3. Those are test-harness updates, not replacements for upstream game code.
-
-These checks do not launch Balatro on Windows, execute Lovely's patches, exercise the official server, or establish spectator reliability under real network conditions. The updated native deck/draft button layout still needs an in-game visual check. Spectator remains experimental. This is a focused compatibility check, not a rerun of every historical test.
+The new open-list feature does not change combat scoring, native final-two 1v1 behavior, or spectator logic. Standard physically omits the spectator modules and hooks. Player ZIPs exclude tests, dependency sources and local saves; the GitHub source ZIP contains the tests and release builder.

@@ -174,18 +174,18 @@ for _, key in ipairs(old_pool.keys) do
     if G.P_CENTERS[key].rarity == 1 then common_key = key end
 end
 G.GAME.draftout_pool = {keys = {rare_key}}
-check(riff_card:calculate_joker({setting_blind = true}) == nil, 'No Commons: skip Riff-Raff trigger')
+check(riff_card:calculate_joker({setting_blind = true}) == 'original calculation', 'No Commons: native Riff-Raff trigger creates fallback Jimbos')
 check(riff_card:calculate_joker({joker_main = true}) == 'original calculation', 'Other contexts unchanged')
 check(create_card('Joker', jokers, nil, nil, nil, nil, nil, 'jud').key == rare_key, 'Judgment allows drafted Rare')
 G.GAME.draftout_pool = {keys = {common_key}}
 G.GAME.used_jokers[common_key] = true
-check(create_card('Joker', jokers, nil, 0, nil, nil, nil, 'rif').key == common_key, 'Exhaustion stays in drafted Common bucket')
+check(create_card('Joker', jokers, nil, 0, nil, nil, nil, 'rif').key == 'j_joker', 'Exhausted Commons use Jimbo')
 check(riff_card:calculate_joker({setting_blind = true}) == 'original calculation')
 G.GAME.draftout_pool, G.GAME.used_jokers = old_pool, {}
 for _, k in ipairs(pool.keys) do G.GAME.used_jokers[k] = true end
-check(members[create_card('Joker', shop).key], 'Exhaustion duplicates stay drafted')
+check(create_card('Joker', shop).key=='j_joker', 'Exhaustion uses Jimbo')
 for _, k in ipairs(pool.keys) do G.GAME.banned_keys[k] = true end
-check(not pcall(create_card, 'Joker', shop), 'All banned fails explicitly')
+check(create_card('Joker', shop).key=='j_joker', 'All banned still permits the Jimbo fallback')
 G.GAME.banned_keys, G.GAME.used_jokers = {}, {}
 local snapshot = D.core.copy(G.GAME)
 D.arm(2)
@@ -391,7 +391,7 @@ do
     check(D.shop_key(roster)== 'j_joker','Duplicate fallback still excludes extinct Gros Michel')
     SMODS.showman=function() return true end
     check(D.shop_key(roster)== 'j_joker','Showman cannot bypass extinction')
-    check(not pcall(D.shop_key,{keys={'j_gros_michel'}}),'Exhaustion never revives extinct Gros Michel')
+    check(D.shop_key({keys={'j_gros_michel'}})=='j_joker','Exhaustion uses Jimbo without reviving Gros Michel')
     check(#roster.keys==2 and roster.keys[1]=='j_gros_michel','Drafted roster and recap are not rewritten')
     local saved=G.GAME
     G:start_run({savetext={GAME=saved}})
@@ -399,7 +399,7 @@ do
     G.GAME.draftout_pool={keys={'j_gros_michel'}}
     check(#D.common_keys(G.GAME.draftout_pool)==0,'Extinct Gros Michel is not an available drafted Common')
     local riff=setmetatable({ability={name='Riff-raff'}},{__index=Card})
-    check(riff:calculate_joker({setting_blind=true})==nil,'Riff-Raff skips an extinct-only Common pool')
+    check(riff:calculate_joker({setting_blind=true})=='original calculation','Riff-Raff can create Jimbo with an extinct-only Common pool')
     G:start_run({})
     check(D.shop_key(roster,'j_gros_michel')=='j_gros_michel','New runs do not inherit another run\'s extinction')
     G.GAME,SMODS.showman=saved_game,saved_showman

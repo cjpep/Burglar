@@ -47,7 +47,7 @@ function D.draft_options()
     local rounds,picks=mod.config.packs_per_player,mod.config.picks_per_turn
     if type(rounds)~='number' or rounds~=math.floor(rounds) or rounds<1 or rounds>4 then rounds=3 end
     if picks~=1 and picks~=2 then picks=1 end
-    return {pack_size=9,packs_per_player=rounds,picks_per_turn=picks,player_count=mod.config.local_players==2 and 2 or 4}
+    return {pack_size=9,packs_per_player=rounds,picks_per_turn=picks,player_count=mod.config.local_players==2 and 2 or 4,open_deck_lists=mod.config.open_deck_lists==true}
 end
 -- A rules update invalidates old draft configurations, not existing run saves.
 local allowed_keys={}
@@ -99,6 +99,7 @@ function D.fresh_seed()
 end
 
 function D.start(seed)
+    if D.open_lists then D.open_lists.open=false end
     local options=D.draft_options()
     options.seed=seed or D.fresh_seed()
     local keys,cube_name=D.cubes.selected()
@@ -132,6 +133,7 @@ end
 -- G.GAME is saved by Balatro; continuing a saved run keeps its original pool.
 local start_run_ref = Game.start_run
 function Game:start_run(args)
+    if D.open_lists then D.open_lists.open=false end
     args = args or {}
     local pending
     if not args.savetext then
@@ -177,28 +179,31 @@ local function pool_candidates(pool)
     end
     return keys,available
 end
-function D.has_available(pool)
-    local keys,available=pool_candidates(pool)
-    for _,key in ipairs(keys) do if available(key) then return true end end
-    return false
-end
-function D.shop_key(pool, forced_key, rarity)
+function D.shop_key(pool, forced_key, rarity, strict_rarity)
     local game=G.GAME
     local keys,available=pool_candidates(pool)
-    if forced_key and has_key(keys,forced_key) and available(forced_key) then return forced_key end
     local function eligible(key)
         return available(key) and (pool.copy_limits or not (game.used_jokers or {})[key] or SMODS.showman(key))
     end
     local preferred
     if type(rarity)=='number' then preferred=rarity>0.95 and 3 or rarity>0.7 and 2 or 1
     else preferred=({Common=1,Uncommon=2,Rare=3})[rarity] end
+    if strict_rarity then
+        local source=keys;keys={}
+        for _,key in ipairs(source) do
+            local center=G.P_CENTERS[key]
+            local r=center and (({Common=1,Uncommon=2,Rare=3})[center.rarity] or center.rarity)
+            if r==preferred then keys[#keys+1]=key end
+        end
+    end
+    if forced_key and has_key(keys,forced_key) and available(forced_key)
+        and (not strict_rarity or eligible(forced_key)) then return forced_key end
     local weights={0.7*(game.common_mod or 1),0.25*(game.uncommon_mod or 1),0.05*(game.rare_mod or 1)}
     local function roll() return pseudorandom('draftout_shop') end
     local key=core.sample(keys,G.P_CENTERS,eligible,roll,weights,preferred)
-    if not key and not pool.copy_limits then key=core.sample(keys,G.P_CENTERS,available,roll,nil,preferred) end
-    if pool.copy_limits then return key end
-    assert(key,'Burglar: no drafted Jokers remain available; check bans and installed mods.')
-    return key
+    -- Jimbo is the sole exhaustion exception: it need not be drafted and may
+    -- exceed its copy cap. Never rewrite the player's roster to add it.
+    return key or 'j_joker'
 end
 
 function D.common_keys(pool)
@@ -211,16 +216,6 @@ function D.common_keys(pool)
     return keys
 end
 
--- No drafted Common means Riff-Raff does not generate a card. Guard its trigger
--- before vanilla queues events: returning nil from create_card would crash callers.
-local calculate_joker_ref = Card.calculate_joker
-function Card:calculate_joker(context)
-    local pool = G.GAME and G.GAME.draftout_pool
-    if pool and context and context.setting_blind and self.ability
-        and self.ability.name == "Riff-raff" and #D.common_keys(pool) == 0 then return end
-    return calculate_joker_ref(self, context)
-end
-
 -- Shop slots and the 'jud'/'rif'/'buf' markers verified in supplied game/SMODS code.
 -- Selecting before construction preserves edition/sticker/materialization handling.
 local create_card_ref = create_card
@@ -228,11 +223,14 @@ function create_card(set, area, legendary, rarity, skip_materialize, soulable, f
     local pool = G.GAME and G.GAME.draftout_pool
     if pool and set=='Joker' and append=='wra' then showman.set(true) end
     local generated = (append == "jud" or append == "rif") and (not area or area == G.jokers)
-    if pool and set == "Joker" and generated then
+    local rarity_tag=append=='rta' and 1 or append=='uta' and 0.9
+    if pool and set=='Joker' and rarity_tag then
+        forced_key=D.shop_key(pool,forced_key,rarity_tag,true)
+        legendary,soulable=nil,false
+    elseif pool and set == "Joker" and generated then
         local source_pool = pool
         if append == "rif" then
             source_pool = {keys = D.common_keys(pool),copy_limits=pool.copy_limits}
-            assert(#source_pool.keys > 0, "Burglar: Riff-Raff has no drafted Common; generation trigger should have been skipped.")
         end
         forced_key = D.shop_key(source_pool, forced_key, append == "rif" and 0 or nil)
         legendary, soulable = nil, false
@@ -242,11 +240,6 @@ function create_card(set, area, legendary, rarity, skip_materialize, soulable, f
     elseif pool and set == "Joker" and area and area == G.shop_jokers then
         forced_key = D.shop_key(pool, forced_key, rarity)
         legendary, soulable = nil, false
-    end
-    if pool and pool.copy_limits and set=='Joker' and not forced_key
-        and (append=='buf' or area==G.shop_jokers) then
-        -- Never exceed a copy cap on exhaustion. Non-Joker shop/pack fallback.
-        set,legendary,rarity,soulable='Tarot',nil,nil,false
     end
     return copies.track(create_card_ref(set, area, legendary, rarity, skip_materialize, soulable, forced_key, append),area)
 end
@@ -289,7 +282,7 @@ local function show()
         screen.nodes[#screen.nodes+1] = row(D.views.navigation())
     end
     if drafting and D.more_open then screen.nodes[#screen.nodes+1]=D.views.utilities() end
-    if not drafting and not (D.recap and D.recap.open) then
+    if not drafting and not (D.recap and D.recap.open) and not (D.open_lists and D.open_lists.open) then
         screen.nodes[#screen.nodes+1]=row({button(D.mode=='mp' and 'Return to lobby' or 'Back','draftout_close',nil,3.3)})
     end
     -- A split surface prevents the owned-roster sidebar from shifting the
@@ -319,6 +312,7 @@ local function show()
 end
 
 function D.screen()
+    if D.open_lists and D.open_lists.open then return D.open_lists.screen() end
     if D.recap and D.recap.open then return D.recap.screen() end
     if D.mode=='bracket' and D.roster_duel then return D.roster_duel.screen() end
     if D.views and D.views.team then return D.views.team_screen() end
@@ -366,7 +360,8 @@ function D.screen()
     else
         local count = 0
         for seat = 1, core.player_count(s) do count = count + #s.pools[seat] end
-        nodes[#nodes + 1] = line("Draft complete. " .. count .. " Joker types drafted.")
+        nodes[#nodes + 1] = line("Draft complete. " .. count .. " Jokers drafted.")
+        if D.open_lists.available() then nodes[#nodes+1]=row({D.open_lists.button()}) end
         nodes[#nodes+1]=row({button('Preview draft recap','draftout_recap_local',nil,4)})
         if mod.config.armed_seat then
             nodes[#nodes+1]=D.views.completed(s.pools[mod.config.armed_seat],
@@ -389,6 +384,7 @@ end
 
 G.FUNCS.draftout_open = function()
     D.mode = 'local'
+    if D.open_lists then D.open_lists.open=false end
     D.more_open=false
     D.local_launcher = true; D.local_clock = nil; D.views.team = nil
     if D.pack_ui then D.pack_ui.clear() end
@@ -422,6 +418,7 @@ assert(SMODS.load_file('burglar/pack_ui.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/draft_views.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/recap.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/roster_duel.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/open_lists.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/mpapi.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/lobby_entry.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/lobby_logo.lua', mod.id))()(D)
@@ -437,6 +434,7 @@ D.settings_ui={timer='',effects='',picks='',packs='',alerts='',players='',diagno
 local function settings_labels()
     local options=D.draft_options()
     D.settings_ui.cube='Draft pool: '..D.cubes.label()
+    D.settings_ui.open_lists='Open deck lists: '..(mod.config.open_deck_lists==true and 'On' or 'Off')
     D.settings_ui.players='Local draft: '..options.player_count..' players'
     D.settings_ui.picks='Pick '..options.picks_per_turn..' per turn'
     D.settings_ui.packs=options.packs_per_player..' packs each ('..core.roster_size(options.packs_per_player)..' Jokers)'
@@ -459,7 +457,8 @@ function D.draft_settings()
     -- makes Balatro place the following controls beside the settings block.
     return row({{n=G.UIT.C,config={align='cm',padding=0.03},nodes={
         row({settings_button('cube','draftout_cube_cycle',7.4)}),
-        row({settings_button('picks','draftout_picks_cycle',3.2),settings_button('packs','draftout_packs_cycle',4.2)})}}})
+        row({settings_button('picks','draftout_picks_cycle',3.2),settings_button('packs','draftout_packs_cycle',4.2)}),
+        row({settings_button('open_lists','draftout_open_lists_toggle',7.4)})}}})
 end
 local function can_change_draft_settings()
     local b=D.mpbridge
@@ -468,6 +467,11 @@ local function can_change_draft_settings()
         return l and l.is_host and not l:is_game_started() and b and (b.phase=='checking' or b.phase=='idle' or b.phase=='error')
     end
     return not mod.config.session or D.local_launcher or mod.config.session.done
+end
+G.FUNCS.draftout_open_lists_toggle=function()
+    if not can_change_draft_settings() then return end
+    mod.config.open_deck_lists=not mod.config.open_deck_lists
+    settings_labels();save()
 end
 G.FUNCS.draftout_cube_cycle=function()
     if not can_change_draft_settings() then return end

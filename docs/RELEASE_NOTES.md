@@ -1,16 +1,14 @@
-# Burglar 0.21.1
+# Burglar 0.24.0 — Open deck lists and Jimbo fallback
 
-Burglar mixes Magic: The Gathering-style drafting with Balatro multiplayer. Draft Jokers with two or four players, then play a run where your roster determines what can show up in your shops. The default draft gives everyone 27 Jokers, and the last player with lives wins.
+- Added **Open deck lists**, an optional draft setup setting, off by default. After the draft is complete and before the match starts, everyone can use **Review all rosters** to browse the other players' picks, including duplicate copies. Picks remain private during the draft.
+- Made **Scaling: 5s per Joker** the default timer. Existing saved timer choices are preserved.
+- Fixed Rare and Uncommon Tag offers falling through to unrelated rarities. They now select an eligible drafted Joker of the promised rarity, or Jimbo when none is available.
+- Replaced the exhausted shop/Buffoon Tarot fallback with **Jimbo (`j_joker`)**. Judgment and Riff-Raff also use Jimbo if their eligible pool is exhausted. Jimbo is an explicit exception to roster ownership and copy limits; the saved roster is unchanged. Normal Joker-space rules still apply.
+- Kept the draft setup controls stacked and centered, with a paginated roster review screen.
+- Updated the multiplayer rules handshake. Everyone in the lobby needs the new Burglar version; use matching editions and Multiplayer versions.
 
-Updated for MultiplayerAPI and MultiplayerPvP 1.0.3. Open draft stays in the lobby, sharing the existing deck-control space. Deck and stake selection now use PvP's native picker; balance is under Lobby Options. Changing those settings after drafting keeps everyone's Joker pool. No extra Group Queue button is added to Burglar's private lobby.
+Choose **Standard** for the full mode without spectator code, or **Spectator** for the experimental delayed viewer. Install only one edition. Close Balatro and replace the entire old Burglar folder.
 
-**Choose one download:**
+Requires Steamodded beta-1814a+, Lovely 0.10+, MultiplayerAPI 1.0.4+, and MultiplayerPvP 1.0.4+. Automated integration checks use the supplied 1.0.4 sources. Live Windows visual and multiplayer playtesting is still needed.
 
-- **Standard:** the full draft mode with spectator code removed.
-- **Spectator:** the same mode plus an experimental delayed spectator view after elimination.
-
-Everyone should use the same version and edition. Close Balatro, move any old Draftout/Burglar folder outside Mods, then extract the chosen Burglar folder into Mods. Don't install both editions or merge folders.
-
-Requires Steamodded >= 1.0.0-beta-1814a, Lovely >= 0.10.0, MultiplayerAPI >= 1.0.3, and MultiplayerPvP >= 1.0.3. Multiplayer 1.0.3 is the integration baseline. See the README for rules, installation, online play, solo testing, and spectator limitations.
-
-**Credits:** Cjpep and Fantom_Balatro. The original idea is Fantom_Balatro's. Thanks to NightmareBalatro, AustereGenie388, PatientEscape38, and UnseenExplosion for playtesting and feedback.
+Original idea: **Fantom_Balatro**. Development: **Cjpep**. Thanks to **NightmareBalatro, AustereGenie388, PatientEscape38, and UnseenExplosion** for playtesting.
