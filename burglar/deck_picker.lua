@@ -15,7 +15,7 @@ return function(D,B)
     local keys={'b_red','b_blue','b_yellow','b_green','b_black','b_magic','b_nebula',
         'b_ghost','b_abandoned','b_checkered','b_zodiac','b_painted','b_anaglyph','b_plasma','b_erratic'}
     local function lobby() return MPAPI.get_current_lobby() end
-    function M.active(l) return D.mod.config.native_draft~=false and B.is_target(l) end
+    function M.active(l) return D.mod.config.native_draft~=false and (B.is_target(l) or (D.tournament and D.tournament.current_board(l))) end
     function M.synced()
         local p=M.pending
         if p and (p.lobby~=lobby() or ((not p.name or (p.lobby:get_metadata() or {}).deck==p.name)
@@ -25,7 +25,7 @@ return function(D,B)
     end
     function M.can_select()
         local l=lobby()
-        return M.active(l) and l.is_host and not l:is_game_started() and not B.started and not B.pending_launch
+        return M.active(l) and not (D.tournament and D.tournament.current_board(l)) and l.is_host and not l:is_game_started() and not B.started and not B.pending_launch
     end
     function M.can_balance()
         return M.can_select() and (not B.session or B.phase=='idle'
@@ -236,6 +236,7 @@ return function(D,B)
         G.FUNCS.draftout_lobby_draft=function()
             local l=lobby()
             if not M.active(l) or l:is_game_started() or B.pending_launch or B.started then return end
+            if D.tournament and D.tournament.current_board(l) then G.FUNCS.draftout_mp_open();return end
             if l.is_host and not B.session then
                 local ok,err=pcall(B.begin)
                 if not ok then B.message=tostring(err):gsub('^.-:%d+: ','') end
@@ -271,7 +272,7 @@ return function(D,B)
                     for i,slot in ipairs(controls and controls.nodes or {}) do
                         if contains_deck(slot) then
                             compact(slot)
-                            local button=D.ui.button('Open draft','draftout_lobby_draft',nil,2.65)
+                            local button=D.ui.button(D.tournament and D.tournament.current_board(lobby()) and 'Bracket' or 'Open draft','draftout_lobby_draft',nil,2.65)
                             button.config.id='draftout_lobby_draft'
                             button.config.func='draftout_lobby_draft_enabled'
                             button.config.colour={0.40,0.27,0.34,1}
@@ -309,7 +310,7 @@ return function(D,B)
                         n.config.padding=0.02
                         label.config.scale=0.28
                         if value then value.config.scale=0.28 end
-                        local button=D.ui.button('Open draft','draftout_lobby_draft',nil,2.65)
+                        local button=D.ui.button(D.tournament and D.tournament.current_board(lobby()) and 'Bracket' or 'Open draft','draftout_lobby_draft',nil,2.65)
                         button.config.id='draftout_lobby_draft'
                         button.config.func='draftout_lobby_draft_enabled'
                         button.config.colour={0.40,0.27,0.34,1}

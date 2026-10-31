@@ -30,12 +30,14 @@ return function(D)
         for i=1,#value do local n=value:byte(i);a=(a*33+n)%4294967291;b=(b*31+n)%4294967279 end
         return string.format('draft-%08x-%08x',a,b)
     end
+    function K.from_pool(pool)
+        assert(pool and pool.draft_schema==core.SCHEMA and pool.session,'Finish an online draft first')
+        return K.validate({schema=1,event=event_id(pool.session),players=pool.player_count or 4,
+            rounds=pool.rounds or 3,seat=pool.seat,keys=pool.keys,copy_limits=pool.copy_limits})
+    end
     function K.capture()
         assert(not K.enabled,'Disable roster mode before changing the loaded roster')
-        local pool=(D.mpbridge or {}).pool or C.mp_last_pool
-        assert(pool and pool.draft_schema==core.SCHEMA and pool.session,'Finish an online draft first')
-        C.bracket_roster=K.validate({schema=1,event=event_id(pool.session),players=pool.player_count or 4,
-            rounds=pool.rounds or 3,seat=pool.seat,keys=pool.keys,copy_limits=pool.copy_limits})
+        C.bracket_roster=K.from_pool((D.mpbridge or {}).pool or C.mp_last_pool)
         save();K.page=1;K.message='Roster saved. You can reuse it in each bracket round.'
     end
     function K.export()
@@ -85,10 +87,10 @@ return function(D)
         K.enabled,K.lobby,K.ticket,K.token,K.ack,K.accepted=nil,nil,nil,nil,nil,nil
         K.message='Roster mode off. Saved roster retained; ordinary PvP uses normal shops.'
     end
-    function K.enable()
+    function K.enable(ticket)
         local l=lobby();pair(l)
         assert(not l:is_game_started(),'Enable the roster before starting a match')
-        K.ticket=K.validate(C.bracket_roster)
+        K.ticket=K.validate(ticket or C.bracket_roster)
         if PVP.signal_ready then PVP.signal_ready(false) end
         K.lobby,K.enabled,K.ack,K.started,K.accepted=l,true,nil,nil,nil
         if l.is_host then
@@ -174,7 +176,7 @@ return function(D)
     function K.on_start(params)
         local l=lobby()
         if not (K.advertised(l) or (K.enabled and K.lobby==l)) then return true end
-        local identity=type(params)=='table' and params.run_id
+        local identity=(type(params)=='table' and params.run_id) or (l and l._game and l._game.started and l._game.started.run_id)
         if K.started and K.started.lobby==l and K.started.run==identity then return false end
         local ok,ticket=pcall(checked,l,true)
         if not ok then K.message=tostring(ticket):gsub('^.-:%d+: ','');D.mode='bracket';U.show();return false end

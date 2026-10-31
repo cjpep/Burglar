@@ -1,4 +1,4 @@
-> Current release: 0.21.0. See RELEASING.md for the two editions and RELEASE_VALIDATION.md for the packaging checks. SPECTATOR_PROTOTYPE.md documents the experimental viewer.
+> Current release: 0.26.0. See RELEASING.md for the two editions and RELEASE_VALIDATION.md for the packaging checks. SPECTATOR_PROTOTYPE.md documents the experimental viewer.
 
 # Development and release checks
 
@@ -112,3 +112,7 @@ The picker embeds native Back.generate_UI nodes directly in its parent layout
 and never creates a detached description UIBox. Deck preview does not set
 G.GAME.viewed_back, run saves, RNG state or shared metadata until Apply. Its
 sprite cleanup is idempotent and also runs when an overlay is closed indirectly.
+
+## 0.26.0 tournament transport
+
+`tournament.lua` uses two native rooms. The original lobby retains seats 1/2 and later hosts the final; it never empties during the semifinal handoff. Seat 3 releases its old seat, reserves a room, returns to publish its code, then joins first as the server-required creator. Seat 4 waits for an occupied room label before joining. Match labels are read through the Nakama SDK, not inferred from local timers. A completed original semifinal advertises the reunion marker only after both matching result receipts are received at the menu. Remote players wait for that marker and a non-running, open room before leaving their own room. Final starts require exactly the two agreed winners with matching roster tickets. No round or hand messages cross between semifinals.

@@ -148,7 +148,10 @@ function Game:start_run(args)
     end
     showman.set(not not (pending or (args.savetext and args.savetext.GAME and args.savetext.GAME.draftout_pool)))
     local result = start_run_ref(self, args)
-    if not args.savetext then self.GAME.draftout_pool = pending end
+    if not args.savetext then
+        self.GAME.draftout_pool = pending
+        if pending and D.stake_stickers then D.stake_stickers.apply(self.GAME,D.stake_stickers.enabled()) end
+    end
     return result
 end
 
@@ -382,8 +385,15 @@ function D.screen()
     return {n = G.UIT.C, config = {align = "cm", padding = 0.08}, nodes = nodes}
 end
 
+local function cube_status()
+    local ok,keys,name=pcall(D.cubes.selected)
+    if not ok then return tostring(keys) end
+    return name..': '..#keys..' eligible Jokers. Use fewer packs for smaller pools.'
+end
+
 G.FUNCS.draftout_open = function()
     D.mode = 'local'
+    if mod.config.draft_cube and mod.config.draft_cube~='default' then D.message=cube_status() end
     if D.open_lists then D.open_lists.open=false end
     D.more_open=false
     D.local_launcher = true; D.local_clock = nil; D.views.team = nil
@@ -420,9 +430,11 @@ assert(SMODS.load_file('burglar/recap.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/roster_duel.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/open_lists.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/mpapi.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/tournament.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/lobby_entry.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/lobby_logo.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/results_ui.lua', mod.id))()(D)
+assert(SMODS.load_file('burglar/stake_stickers.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/spectator.lua', mod.id))()(D)
 D.updates.add('diagnostics',function()
     -- Diagnostic/storage failures must never interrupt gameplay.
@@ -457,6 +469,7 @@ function D.draft_settings()
     -- makes Balatro place the following controls beside the settings block.
     return row({{n=G.UIT.C,config={align='cm',padding=0.03},nodes={
         row({settings_button('cube','draftout_cube_cycle',7.4)}),
+        row({D.stake_stickers.button()}),
         row({settings_button('picks','draftout_picks_cycle',3.2),settings_button('packs','draftout_packs_cycle',4.2)}),
         row({settings_button('open_lists','draftout_open_lists_toggle',7.4)})}}})
 end
@@ -480,8 +493,7 @@ G.FUNCS.draftout_cube_cycle=function()
     local next_id=choices[1]
     for i,id in ipairs(choices) do if id==current then next_id=choices[i%#choices+1];break end end
     mod.config.draft_cube=next_id
-    local ok,keys=pcall(D.cubes.selected)
-    D.message=ok and (D.cubes.label()..': '..#keys..' eligible Jokers. Use fewer packs for smaller pools.') or tostring(keys)
+    D.message=cube_status()
     settings_labels();save()
     if D.mode=='mp' and D.mpbridge then D.mpbridge.message=D.message end
     if D.mode=='mp' and D.mpbridge and D.mpbridge.phase=='checking' then
@@ -568,6 +580,12 @@ mod.config_tab = function()
         row({button("Disarm future runs", "draftout_disarm", nil, 5)}),
         line("Solo test pools apply to new normal runs.", 0.26),
     }
+    if D.tournament and mod.config.tournament_session then
+        nodes[#nodes+1]=row({button('Return to tournament lobby','burglar_tourney_home',nil,5)})
+    end
+    if D.tournament and mod.config.tournament_session and not MPAPI.get_current_lobby() then
+        nodes[#nodes+1]=row({button('Rejoin tournament','burglar_tourney_rejoin',nil,5)})
+    end
     if D.recap.available() then nodes[#nodes+1]=row({D.recap.button()}) end
     if D.mpbridge then table.insert(nodes, 2, row({button("Multiplayer PvP lobby draft", "draftout_mp_open", nil, 5)})) end
     return {n = G.UIT.ROOT, config = {align = "cm", padding = 0.2, colour = G.C.BLACK, r = 0.1}, nodes = nodes}

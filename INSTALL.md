@@ -1,4 +1,4 @@
-# Installing Burglar 0.24.0
+# Installing Burglar 0.26.0
 
 Choose one player download: **Standard** (no spectator code) or **Spectator** (experimental viewer included). Use the same version and edition as your friends.
 
@@ -20,3 +20,5 @@ Solo testing: Mods → Burglar → Config → Local development draft.
 To switch editions, close Balatro and replace the entire Burglar folder with the other edition. Do this between matches. Never install both at once.
 
 README.md contains full instructions. EDITION.txt identifies this player download. The GitHub source ZIP is for repository upload; player downloads are the easiest installation.
+
+For tournaments, switch **Format** to **Tournament** in Open draft with four players. After drafting click **Play tournament**. Both semifinals run independently. Both players return to lobby after their match; Burglar reunites the players for a fresh final.

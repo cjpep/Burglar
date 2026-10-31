@@ -34,3 +34,9 @@ For a cube containing duplicates, each player's drafted count controls new Joker
 Owned cards, existing shop/pack offers and pending card creations all count so simultaneous offers cannot exceed the limit. Shops, Buffoon packs, Judgment and Riff-Raff respect it; Showman does not bypass these explicit limits. Wraith and Soul remain exceptions, and existing copying effects are not prevented from copying cards. Any extra owned copies still count when deciding whether another shop/generated copy may appear.
 
 If every eligible copy is already owned or offered, a new shop/Buffoon Joker slot falls back to **Jimbo (`j_joker`)**, not a Tarot. Judgment and Riff-Raff also use Jimbo when no eligible Joker remains; Riff-Raff first tries your drafted Commons. Rare/Uncommon Tags first try their promised rarity, then Jimbo. This is an explicit exception: Jimbo need not be drafted and can exceed his copy cap, but he is never added to your roster. Normal Joker-space limits still apply. Default and nonduplicate drafts use the same Jimbo exhaustion fallback. Copy limits are availability caps, not lifetime purchase quotas.
+
+The setup button shows the filename. The status below it shows the JSON `name` and eligible Joker count; if `name` is omitted, it uses the filename.
+
+## Included cubes by Fantom_Balatro
+
+All Commons, All Uncommons, All Rares, Badlatro, Oops All Scoring Jokers, and Powered Cube are included in both install editions and the GitHub source. Their original JSON contents are preserved from the repository. Each supports the default four-player, three-pack draft. Some pools are too small for four packs with four players; the setup capacity check explains this before starting.

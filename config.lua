@@ -1,4 +1,5 @@
 return {
+    stake_stickers = false, -- Eternal / Perishable / Rental from the selected stake.
     draft_rules = 6,
     draft_cube = 'default',
     pack_size = 9,

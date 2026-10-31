@@ -1773,7 +1773,7 @@ class ApiTests(unittest.TestCase):
     def test_delayed_duplicate_offer_does_not_reset_draft(self):
         bus=Bus(); bus.begin(); host=bus.clients[0]
         packet={'protocol':4,'kind':'offer','room':'ROOM','session':host.value('B.session'),'recipient':'p2',
-                'data':{'ids':['p1','p2','p3','p4'],'owner':'p1','catalog':'|'.join(host.value('keys')),'keys':host.value('keys'),'cube_name':'Default','rules':20}}
+                'data':{'ids':['p1','p2','p3','p4'],'owner':'p1','catalog':'|'.join(host.value('keys')),'keys':host.value('keys'),'cube_name':'Default','rules':22}}
         host.run('B.start_draft()'); bus.flush()
         remote=bus.clients[1]
         remote.receive({'cid':'delayed','action':'draftout_pack_v4','from':'p1','to':'p2','params':{'packet':packet}})

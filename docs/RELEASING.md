@@ -2,11 +2,11 @@
 
 ## Repository files
 
-1. Extract **Burglar_v0.24.0_GitHub_Source.zip**.
+1. Extract **Burglar_v0.26.0_GitHub_Source.zip**.
 2. Open **Burglar-source** and upload its **contents** to your repository's root. Don't upload the ZIP as source or create another Burglar-source folder inside the repository.
 3. The top level should show `README.md`, `Burglar.json`, `main.lua`, `config.lua`, `LICENSE`, and the `burglar`, `assets`, `docs`, `tests`, and `tools` folders.
 4. If updating the old repository, delete its old `Draftout.json` and `draftout` module directory. Uploading new files doesn't automatically remove them. Keep one manifest and one entry point.
-5. Commit with a message such as **Package Burglar 0.24.0 in Standard and Spectator editions**. For a repository you maintain yourself, committing directly to main is fine.
+5. Commit with a message such as **Package Burglar 0.26.0 in Standard and Spectator editions**. For a repository you maintain yourself, committing directly to main is fine.
 
 The README is the GitHub description and play guide. Suggested short repository description:
 
@@ -14,10 +14,10 @@ The README is the GitHub description and play guide. Suggested short repository 
 
 ## Release downloads
 
-Create a release tagged **v0.24.0**, titled **Burglar 0.24.0**. Attach:
+Create a release tagged **v0.26.0**, titled **Burglar 0.26.0**. Attach:
 
-- `Burglar_v0.24.0_Standard.zip`
-- `Burglar_v0.24.0_Spectator.zip`
+- `Burglar_v0.26.0_Standard.zip`
+- `Burglar_v0.26.0_Spectator.zip`
 
 Use `docs/RELEASE_NOTES.md` for the description. Mark it as a pre-release if you want to retain that label while multiplayer playtesting continues. The Spectator edition remains experimental regardless of the release label.
 

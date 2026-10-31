@@ -3,7 +3,7 @@
 return function(D)
     if not (MPAPI and PVP and PVP.id == 'MultiplayerPvP') then return end
     local C, core, U = D.mod.config, D.core, D.ui
-    local RULES = 20
+    local RULES = 22
     local B = {phase = 'idle', serial = 0, attached = true, failed_sessions = {}}
     D.mpbridge = B
     local recap=D.recap or assert(SMODS.load_file('burglar/recap.lua',D.mod.id))()(D)
@@ -125,6 +125,7 @@ return function(D)
         assert(not lobby():is_game_started(), 'Finish the current match first')
         assert(decks.synced(), 'Waiting for the server to confirm the selected deck')
         local ids,owner,room=roster()
+        assert(not (D.tournament and D.tournament.requested(lobby())) or #ids==4,'Tournament needs four players')
         for _,id in ipairs(ids) do assert(connected(id),'All draft players must be connected') end
         local keys,cube_name=cubes.selected()
         local options=D.draft_options();options.player_count=#ids
@@ -167,6 +168,7 @@ return function(D)
 
     function B.start_draft()
         assert(is_host() and B.phase == 'checking', 'Run the lobby check first')
+        assert(not (D.tournament and D.tournament.requested(lobby())) or #B.ids==4,'Tournament needs four players')
         assert(B.matches(), 'Lobby roster or ruleset changed; run the check again')
         assert(all_connected(), 'All draft players must be connected')
         assert(every(B.hello), 'Waiting for all Burglar players and private routing')
@@ -376,6 +378,7 @@ return function(D)
         local ok, err = pcall(function()
             if D.spectator and D.spectator.receive(from,packet) then return end
             if D.roster_duel and D.roster_duel.receive(from,packet) then return end
+            if D.tournament and D.tournament.receive(from,packet) then return end
             if recap.receive(from,packet) then return end
             if combat.receive(from,packet) then return end
             B.receive(from,packet)
@@ -390,6 +393,10 @@ return function(D)
         error = function(text) D.pack_ui.unlock(); message(text,true) end,
         event = function(l, kind, id)
             if D.spectator then pcall(D.spectator.event,l,kind,id) end
+            if D.tournament then
+                if kind=='game_ended' then D.tournament.ended(l,id) end
+                if kind=='metadata_changed' and B.is_target(l) and not l:is_game_started() and D.mode=='mp' and D.overlay and G.OVERLAY_MENU==D.overlay then U.show() end
+            end
             if D.roster_duel then D.roster_duel.event(l,kind,id) end
             recap.event(l,kind,id)
             if B.lobby~=l then return end
@@ -447,6 +454,11 @@ return function(D)
             decks.install()
             start_ref = assert(PVP.pvp_start_match, 'PvP 1.0.0 start flow missing')
             function PVP.pvp_start_match(...)
+                if D.tournament and D.tournament.block_start(lobby()) then
+                    if D.tournament.board(lobby()) then D.mode='mp';U.show()
+                    elseif PVP.UI and PVP.UI.UTILS then PVP.UI.UTILS.overlay_message('Waiting for the tournament rosters.') end
+                    return
+                end
                 if D.roster_duel and (D.roster_duel.advertised(lobby())
                     or (D.roster_duel.enabled and D.roster_duel.lobby==lobby())) then
                     if not D.roster_duel.start_allowed() then return end
@@ -459,6 +471,7 @@ return function(D)
                         end
                         D.mode = 'mp'; U.show(); return
                     end
+                    if D.tournament and D.tournament.requested(lobby()) then D.tournament.begin();D.mode='mp';U.show();return end
                     B.pending_launch = true
                     return
                 end
@@ -467,7 +480,9 @@ return function(D)
             local on_game_start_ref = assert(PVP.on_game_start, 'PvP 1.0.0 game-start flow missing')
             function PVP.on_game_start(params)
                 open_lists.open=false
+                if D.tournament and (D.tournament.block_start(lobby()) or D.tournament.requested(lobby())) then return end
                 if D.roster_duel and not D.roster_duel.on_start(params) then return end
+                if D.tournament then D.tournament.started(lobby(),params) end
                 local run_id=type(params)=='table' and params.run_id
                 local run_identity=run_id and (tostring(run_id)..'|'..tostring(params.seed)..'|'..tostring(not not params.restarted))
                 if target(lobby()) and run_identity and B.handled_run==run_identity then return end
@@ -489,15 +504,20 @@ return function(D)
     end)
 
     function D.multiplayer_screen()
+        local bracket=D.tournament and D.tournament.current_board(lobby())
+        if bracket then return D.tournament.screen(bracket) end
         local view = B.view
         local drafting=view and not view.done
         local nodes = {}
         if not drafting then nodes[#nodes+1]=U.line('BURGLAR / JOKER DRAFT',0.36) end
+        if D.tournament and not view and is_host() then
+            nodes[#nodes+1]=U.row({U.button('Format: '..(D.tournament.requested(lobby()) and 'Tournament' or 'Free-for-all'),'burglar_tourney_format',nil,5)})
+        end
         if B.phase=='idle' and not is_host() then
             nodes[#nodes+1]=U.line('Waiting for the host to set up the draft.',0.26)
         end
         if not view or view.done then
-            nodes[#nodes+1]=U.line(B.ids and #B.ids==2
+            nodes[#nodes+1]=U.line(D.tournament and D.tournament.requested(lobby()) and 'Two semifinals, then a fresh four-life final' or B.ids and #B.ids==2
                 and '4 lives - PvP from Ante 2 - native 1v1 scoring'
                 or '4 lives - PvP from Ante 2 - final two play 1v1',0.23)
         end
@@ -524,11 +544,13 @@ return function(D)
                         total=core.roster_size(view.rounds)})
             end
         elseif B.pool then
+            if is_host() and D.stake_stickers then nodes[#nodes+1]=U.row({D.stake_stickers.button()}) end
             nodes[#nodes+1]=D.views.completed(B.pool.keys,'Close this screen and Ready up in the PvP lobby.')
             if open_lists.available() then nodes[#nodes+1]=U.row({open_lists.button()}) end
             if D.roster_duel then nodes[#nodes+1]=U.row({U.button('Save roster / bracket 1v1','draftout_bracket_open',nil,4)}) end
             if is_host() and B.launch_ready() then
-                nodes[#nodes+1] = U.row({U.button('Start match', 'draftout_mp_start', nil, 5)})
+                if D.tournament and #B.ids==4 then nodes[#nodes+1]=U.row({U.button('Play tournament','burglar_tourney_begin',nil,5)}) end
+                if not (D.tournament and D.tournament.requested(lobby())) then nodes[#nodes+1] = U.row({U.button('Start match', 'draftout_mp_start', nil, 5)}) end
             end
         end
         if not drafting then
@@ -567,6 +589,7 @@ return function(D)
 
     local updates=assert(SMODS.load_file('burglar/updates.lua',D.mod.id))()(D)
     updates.add('multiplayer',function(self,dt)
+        if D.tournament then D.tournament.tick() end
         if D.roster_duel then D.roster_duel.tick() end
         recap.tick()
         combat.rounds.handover.tick()

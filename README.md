@@ -14,8 +14,8 @@ Get a player ZIP from this repository's **Releases** page:
 
 | Edition | What you get |
 | --- | --- |
-| **Burglar v0.24.0 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
-| **Burglar v0.24.0 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
+| **Burglar v0.26.0 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
+| **Burglar v0.26.0 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
 
 Install **one edition only**. Everyone in the lobby should use the same version and edition. Switch editions between matches by replacing the entire Burglar folder. The GitHub source includes spectating; use a release download for Standard.
 
@@ -105,7 +105,27 @@ This is a reconstructed view from game snapshots, not a screen share or full rep
 
 For a scripted preview: **Mods → Burglar → Config → Local spectator preview**. It demonstrates the layout, not a live connection.
 
-## Optional: draft once, play separate 1v1s
+## Lobby tournament (four players)
+
+1. In a four-player Burglar lobby, open **Open draft**, choose **Format: Tournament**, and draft as usual. Choose **Stake stickers: On** here if wanted; it defaults to Off.
+2. After drafting, click **Play tournament**. The mod saves everyone's original pool and sets up the two semifinal rooms automatically. One player briefly leaves and returns while the second room is created; wait for setup to finish.
+3. Seats 1–2 play in the original room; seats 3–4 move into a separate native Nemesis room. Both semifinals can run at the same time. Each pair readies up and starts its own four-life 1v1. Neither pair waits for the other pair to enter or finish a PvP blind.
+4. **Both players click Return to lobby after their semifinal.** Stay connected while results are confirmed. If your semifinal finishes first, wait in its lobby. Once both are finished and returned, Burglar reunites the players automatically, records the winners, and sends the eliminated players back out of the lobby.
+5. The two finalists ready up in the original room and start a **fresh four-life 1v1 at Ante 1**. Only their original drafted pools and copy limits carry forward. Money, bought Jokers, vouchers, consumables, card/deck changes and lost lives reset.
+
+A drawn or disputed match advances nobody. After both players return, use **Bracket → Replay drawn match** on both clients, then ready up for a new run. The other semifinal continues independently. If you disconnect between rooms, **Mods → Burglar → Config → Rejoin tournament** returns to your assigned room. Do not leave immediately after losing: return to the lobby first so both results can be confirmed.
+
+All players must use the same new version. Start a fresh tournament after updating; do not update halfway through a 0.25.0 bracket. This is a playtest build: room handoffs, match discovery and rendering still need a four-player test on the official server.
+
+## Stake stickers
+
+**Stake stickers** is a host-controlled option in draft setup and on the completed-draft screen. It defaults to **Off**. The local development draft has the same option for its armed runs.
+
+When On, the applied stake chain enables Eternal (Black), Perishable (Orange), and Rental (Gold), with the game's normal rolls and Joker compatibility. This includes the corresponding vanilla tiers when the PvP balance ruleset replaces their modifier functions. Custom-stake sticker flags are respected. White Stake adds none. The setting is saved with the run and carried into both semifinals and the final; changing your local config does not override the host.
+
+This option concerns gameplay modifiers, not collection win badges. It does not add stickers to the draft previews or change non-Burglar games.
+
+## Optional: manual saved-roster 1v1s
 
 After a four-player draft, each player opens **Save roster / bracket 1v1 → Save latest draft roster**. Leave the draft lobby and make separate private **Nemesis** lobbies. Both players must open **Saved-roster 1v1 / bracket → Enable for this lobby**.
 
