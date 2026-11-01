@@ -5,7 +5,7 @@ Click to cycle through Default and the JSON files in this folder.
 Default keeps Burglar's existing eligible Joker list.
 
 To make your own pool:
-1. Copy `example_pool.json` into this same folder with a new name, such as `my_cube.json`.
+1. Copy any included cube JSON into this same folder with a new name, such as `my_cube.json`.
 2. Edit the `name` and the `jokers` array. Use internal Joker IDs (for example `j_joker`), not display names.
 3. Keep `version` set to 1. Remove IDs you don't want. Repeat an ID to include multiple draftable copies.
 4. In draft setup, cycle **Draft pool** to your file, then choose the pack count and prepare the draft.

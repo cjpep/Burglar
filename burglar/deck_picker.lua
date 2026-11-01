@@ -20,6 +20,8 @@ return function(D,B)
         local p=M.pending
         if p and (p.lobby~=lobby() or ((not p.name or (p.lobby:get_metadata() or {}).deck==p.name)
             and (not p.stake or tonumber((p.lobby:get_metadata() or {}).stake)==tonumber(p.stake))
+            and (not p.roll_id or (type((p.lobby:get_metadata() or {}).burglar_deck_roll)=='table'
+                and p.lobby:get_metadata().burglar_deck_roll.id==p.roll_id))
             and (not p.ruleset or (p.lobby:get_metadata() or {}).ruleset==p.ruleset))) then M.pending=nil end
         return M.pending==nil
     end
@@ -237,10 +239,6 @@ return function(D,B)
             local l=lobby()
             if not M.active(l) or l:is_game_started() or B.pending_launch or B.started then return end
             if D.tournament and D.tournament.current_board(l) then G.FUNCS.draftout_mp_open();return end
-            if l.is_host and not B.session then
-                local ok,err=pcall(B.begin)
-                if not ok then B.message=tostring(err):gsub('^.-:%d+: ','') end
-            end
             G.FUNCS.draftout_mp_open()
         end
         G.FUNCS.draftout_lobby_draft_enabled=function(e)
@@ -330,5 +328,6 @@ return function(D,B)
             return decorate(node)
         end
     end
+    assert(SMODS.load_file('burglar/deck_wheel.lua',D.mod.id))()(D,M,B)
     return M
 end

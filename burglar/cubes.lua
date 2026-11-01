@@ -2,7 +2,9 @@
 return function(D)
     if D.cubes then return D.cubes end
     -- Retire the former preset without breaking a saved selection.
-    if D.mod.config.draft_cube=='commons' then D.mod.config.draft_cube='default' end
+    if D.mod.config.draft_cube=='commons' or D.mod.config.draft_cube=='example_pool.json' then
+        D.mod.config.draft_cube='default'
+    end
     local C={}
     D.cubes=C
     local function filename(value)

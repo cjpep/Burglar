@@ -71,7 +71,7 @@ return function(D,send)
         local ante=G.GAME and G.GAME.round_resets and G.GAME.round_resets.ante
         if ante and data.ante~=ante then return true end
         M.received,M.view=data.revision,data
-        M.ui.average=data.average
+        M.ui.average=A.format_average(data.average)
         M.ui.label=data.final and 'Final average' or 'Average (live)'
         return true
     end
@@ -155,7 +155,7 @@ return function(D,send)
             e.config.ref_table,e.config.ref_value=M.ui,'average'
             local hidden=PVP.LOBBY.config.hide_score_until_played and G.GAME.current_round
                 and G.GAME.current_round.hands_played==0
-            M.ui.average=hidden and '???' or (M.view and M.view.average or '0')
+            M.ui.average=hidden and '???' or A.format_average(M.view and M.view.average or '0')
             e.config.scale=math.min(0.7,7/math.max(10,#M.ui.average))
             PVP.GAME.enemy.hands_text=M.view and (M.view.finished..'/'..M.view.count) or '0/4'
         end end

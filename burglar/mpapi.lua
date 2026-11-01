@@ -376,7 +376,6 @@ return function(D)
     local function safe_receive(from, packet)
         if D.diag then D.diag('packet_receive',{kind=type(packet)=='table' and packet.kind}) end
         local ok, err = pcall(function()
-            if D.spectator and D.spectator.receive(from,packet) then return end
             if D.roster_duel and D.roster_duel.receive(from,packet) then return end
             if D.tournament and D.tournament.receive(from,packet) then return end
             if recap.receive(from,packet) then return end
@@ -392,7 +391,6 @@ return function(D)
         packet = safe_receive,
         error = function(text) D.pack_ui.unlock(); message(text,true) end,
         event = function(l, kind, id)
-            if D.spectator then pcall(D.spectator.event,l,kind,id) end
             if D.tournament then
                 if kind=='game_ended' then D.tournament.ended(l,id) end
                 if kind=='metadata_changed' and B.is_target(l) and not l:is_game_started() and D.mode=='mp' and D.overlay and G.OVERLAY_MENU==D.overlay then U.show() end
@@ -449,6 +447,17 @@ return function(D)
 
     local start_ref
     MPAPI.on_loaded(function()
+        -- PvP 1.0.4 puts opponent rows above the player's own card areas.
+        -- Empty rows otherwise look like duplicate slot backgrounds. Suppress
+        -- only their drawing in Burglar; retain the areas for Phantom/Trap sync
+        -- and automatically draw them normally as soon as they contain cards.
+        local draw_area = CardArea.draw
+        function CardArea:draw(...)
+            if G.STAGE == G.STAGES.RUN and G.GAME and G.GAME.draftout_pool
+                and (self == PVP.nemesis_jokers or self == PVP.nemesis_consumeables)
+                and self.cards and #self.cards == 0 then return end
+            return draw_area(self, ...)
+        end
         local ok, err = pcall(function()
             combat.install()
             decks.install()
@@ -509,7 +518,14 @@ return function(D)
         local view = B.view
         local drafting=view and not view.done
         local nodes = {}
-        if not drafting then nodes[#nodes+1]=U.line('BURGLAR / JOKER DRAFT',0.36) end
+        if not drafting then
+            nodes[#nodes+1]=U.line('BURGLAR / JOKER DRAFT',0.36)
+            if is_host() then
+                nodes[#nodes+1]=U.line(B.pool and '3 / 3  -  Draft complete'
+                    or B.phase=='checking' and '2 / 3  -  Check players'
+                    or '1 / 3  -  Choose draft settings',0.28)
+            end
+        end
         if D.tournament and not view and is_host() then
             nodes[#nodes+1]=U.row({U.button('Format: '..(D.tournament.requested(lobby()) and 'Tournament' or 'Free-for-all'),'burglar_tourney_format',nil,5)})
         end
@@ -521,16 +537,26 @@ return function(D)
                 and '4 lives - PvP from Ante 2 - native 1v1 scoring'
                 or '4 lives - PvP from Ante 2 - final two play 1v1',0.23)
         end
-        if not view or view.done then
-            nodes[#nodes+1] = U.line('Draft Jokers with 2 to 4 players.', 0.25)
+        if not view and B.phase~='checking' and is_host() then
+            nodes[#nodes+1]=U.line('Choose your settings, then check that everyone is connected.',0.23)
+        end
+        if D.deck_wheel and D.deck_wheel.available() and is_host() then
+            nodes[#nodes+1]=U.row({U.button('Random deck','burglar_random_deck',nil,5)})
         end
         if B.phase == 'checking' and is_host() then
             local count = 0
             for _, id in ipairs(B.ids or {}) do if B.hello[id] then count = count+1 end end
-            nodes[#nodes+1] = U.line(count .. '/'..#B.ids..' players connected to draft')
+            B.setup_status=count .. '/'..#B.ids..' players connected to draft'
+            local status=U.line('',0.24)
+            status.nodes[1].config.text=nil
+            status.nodes[1].config.ref_table=B
+            status.nodes[1].config.ref_value='setup_status'
+            nodes[#nodes+1]=status
             nodes[#nodes+1] = D.draft_settings()
             nodes[#nodes+1] = U.row({D.timer_button()})
-            nodes[#nodes+1] = U.row({U.button('Start drafting', 'draftout_mp_begin', nil, 5)})
+            local start=U.button('Start draft', 'draftout_mp_begin', nil, 5)
+            start.config.func='burglar_can_start_draft'
+            nodes[#nodes+1]=U.row({start})
         elseif view and not view.done then
             nodes[#nodes+1]=D.views.header('BURGLAR  |  Pack '..view.round..'/'..view.rounds..'  -  Pick '..view.pick..'/'..math.ceil(core.round_size(view.round,view.rounds)/(view.picks_per_turn or 1)),B.time_left)
             nodes[#nodes+1]=D.views.readiness(B.readiness(),view.seat,view.round)
@@ -545,9 +571,11 @@ return function(D)
             end
         elseif B.pool then
             if is_host() and D.stake_stickers then nodes[#nodes+1]=U.row({D.stake_stickers.button()}) end
-            nodes[#nodes+1]=D.views.completed(B.pool.keys,'Close this screen and Ready up in the PvP lobby.')
+            nodes[#nodes+1]=D.views.completed(B.pool.keys,is_host()
+                and 'Review the rosters, then start the match when everyone is ready.'
+                or 'Review the rosters, then return to the lobby and Ready up.')
             if open_lists.available() then nodes[#nodes+1]=U.row({open_lists.button()}) end
-            if D.roster_duel then nodes[#nodes+1]=U.row({U.button('Save roster / bracket 1v1','draftout_bracket_open',nil,4)}) end
+            if D.roster_duel then nodes[#nodes+1]=U.row({U.button('Saved roster tools','draftout_bracket_open',nil,4)}) end
             if is_host() and B.launch_ready() then
                 if D.tournament and #B.ids==4 then nodes[#nodes+1]=U.row({U.button('Play tournament','burglar_tourney_begin',nil,5)}) end
                 if not (D.tournament and D.tournament.requested(lobby())) then nodes[#nodes+1] = U.row({U.button('Start match', 'draftout_mp_start', nil, 5)}) end
@@ -560,9 +588,11 @@ return function(D)
                     nodes[#nodes+1]=D.draft_settings()
                     nodes[#nodes+1]=U.row({D.timer_button()})
                 end
-                local label = (B.host_state or B.pool) and 'Restart draft'
-                    or B.phase == 'checking' and 'Check players again' or 'Prepare draft'
-                nodes[#nodes+1]=U.row({U.button(label,'draftout_mp_check',nil,4.5)})
+                local label = (B.host_state or B.pool) and 'Discard picks / new draft'
+                    or B.phase == 'checking' and 'Recheck connections' or 'Check players'
+                local check=U.button(label,'draftout_mp_check',nil,4.5)
+                if B.phase=='checking' or B.pool then check.config.colour=G.C.UI.BACKGROUND_INACTIVE end
+                nodes[#nodes+1]=U.row({check})
             end
         end
         -- Normal draft status is already represented by the header/seating strip.
@@ -580,6 +610,18 @@ return function(D)
         end
     end
     G.FUNCS.draftout_mp_open = function() D.mode = 'mp'; D.more_open=false; U.show() end
+    G.FUNCS.burglar_can_start_draft=function(e)
+        local count=0
+        for _,id in ipairs(B.ids or {}) do
+            if B.hello and B.hello[id] and connected(id) then count=count+1 end
+        end
+        local ready=is_host() and B.phase=='checking' and B.matches() and all_connected()
+            and every(B.hello) and now()>=(B.deadline or math.huge)
+        B.setup_status=count..'/'..#(B.ids or {})..' players connected'
+            ..(ready and ' - Ready to draft' or ' - Waiting for connection checks')
+        e.config.button=ready and 'draftout_mp_begin' or nil
+        e.config.colour=ready and G.C.GREEN or G.C.UI.BACKGROUND_INACTIVE
+    end
     G.FUNCS.draftout_mp_check = action(function() B.begin() end)
     G.FUNCS.draftout_mp_begin = action(function() B.start_draft() end)
     G.FUNCS.draftout_mp_refresh = action(function()

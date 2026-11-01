@@ -71,6 +71,14 @@ local function save()
     SMODS.save_mod_config(mod)
 end
 
+-- Adopt the new default once on upgrade. Later user choices remain respected;
+-- existing drafts/runs retain the visibility setting saved with their session.
+if not mod.config.open_lists_default_v2 then
+    mod.config.open_deck_lists=true
+    mod.config.open_lists_default_v2=true
+    save()
+end
+
 local function name(key)
     return localize({type = "name_text", set = "Joker", key = core.key(key)})
 end
@@ -151,6 +159,16 @@ function Game:start_run(args)
     if not args.savetext then
         self.GAME.draftout_pool = pending
         if pending and D.stake_stickers then D.stake_stickers.apply(self.GAME,D.stake_stickers.enabled()) end
+    end
+    -- Keep Balanced's reworks, but exclude Asteroids from Burglar's consumable
+    -- pools. Apply after native/API run setup so their ban initialization cannot
+    -- overwrite this. The saved flag keeps the restriction on a resumed run,
+    -- including before its multiplayer lobby has reconnected.
+    if self.GAME.draftout_pool and (self.GAME.burglar_no_asteroids
+        or (PVP and PVP.is_layer_active and PVP.is_layer_active('balanced'))) then
+        self.GAME.burglar_no_asteroids = true
+        self.GAME.banned_keys = self.GAME.banned_keys or {}
+        self.GAME.banned_keys.c_mp_asteroid = true
     end
     return result
 end
@@ -435,7 +453,6 @@ assert(SMODS.load_file('burglar/lobby_entry.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/lobby_logo.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/results_ui.lua', mod.id))()(D)
 assert(SMODS.load_file('burglar/stake_stickers.lua', mod.id))()(D)
-assert(SMODS.load_file('burglar/spectator.lua', mod.id))()(D)
 D.updates.add('diagnostics',function()
     -- Diagnostic/storage failures must never interrupt gameplay.
     if not pcall(diagnostics.tick) then diagnostics.status='Diagnostic update skipped' end
@@ -446,7 +463,7 @@ D.settings_ui={timer='',effects='',picks='',packs='',alerts='',players='',diagno
 local function settings_labels()
     local options=D.draft_options()
     D.settings_ui.cube='Draft pool: '..D.cubes.label()
-    D.settings_ui.open_lists='Open deck lists: '..(mod.config.open_deck_lists==true and 'On' or 'Off')
+    D.settings_ui.open_lists='Reveal rosters after draft: '..(mod.config.open_deck_lists==true and 'On' or 'Off')
     D.settings_ui.players='Local draft: '..options.player_count..' players'
     D.settings_ui.picks='Pick '..options.picks_per_turn..' per turn'
     D.settings_ui.packs=options.packs_per_player..' packs each ('..core.roster_size(options.packs_per_player)..' Jokers)'
@@ -575,7 +592,6 @@ mod.config_tab = function()
         {n=G.UIT.R,config={align='cm'},nodes={{n=G.UIT.T,config={ref_table=diagnostics,
             ref_value='status',scale=0.23,colour=G.C.WHITE}}}},
         row({button("Local development draft", "draftout_open", nil, 5)}),
-        row({button('Local spectator preview','draftout_spectate_demo',nil,5)}),
         row({button('Saved-roster 1v1 / bracket','draftout_bracket_open',nil,5)}),
         row({button("Disarm future runs", "draftout_disarm", nil, 5)}),
         line("Solo test pools apply to new normal runs.", 0.26),

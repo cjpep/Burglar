@@ -1,5 +1,24 @@
 # Burglar
 
+## Latest release: 0.26.5
+
+The host deck wheel now waits for its specific server confirmation and preserves
+input releases without letting dismissal clicks reach the lobby underneath.
+This Standard release includes the scaling cube and Balanced Asteroid exclusion
+from 0.26.4. The example cube has been removed; old selections fall back to Default.
+Everyone should update to the same version. Replace the entire Burglar folder.
+
+## New in 0.26.4
+
+Select **dont_worry_chat_were_scaling.json** using **Open draft → Draft pool**.
+This cube contains 126 copies (63 different Jokers); a default four-player draft
+uses 108 and leaves 18 out. Its four-player limit is three packs.
+
+Burglar runs using Balanced (or a ruleset built on its layer) now exclude
+Asteroids from normal consumable pools. Other Balanced changes remain active.
+Previously owned Asteroids are not deleted from saved runs. Start a fresh match.
+The host deck wheel and updated icon are included. This release is Standard only.
+
 **A two- to four-player Joker draft for Balatro.**
 
 Burglar brings Magic: The Gathering-style drafting to Balatro multiplayer. Before the run, you and your friends open packs of Jokers, pick what you want, and pass the rest around the table. The Jokers you draft become your personal shop pool for that match.
@@ -14,8 +33,8 @@ Get a player ZIP from this repository's **Releases** page:
 
 | Edition | What you get |
 | --- | --- |
-| **Burglar v0.26.1 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
-| **Burglar v0.26.1 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
+| **Burglar v0.26.5 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
+| **Burglar v0.26.5 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
 
 Install **one edition only**. Everyone in the lobby should use the same version and edition. Switch editions between matches by replacing the entire Burglar folder. The GitHub source includes spectating; use a release download for Standard.
 
@@ -44,10 +63,10 @@ Replace the whole folder when updating or changing editions. Don't merge edition
 1. Open **Multiplayer PvP → Create Lobby → Burglar → CREATE**.
 2. Share the lobby code. Burglar supports **two, three, or four players**.
 3. The host clicks the **deck/stake button below Open draft** to use PvP's native deck picker. Choose balance rules under **Lobby Options**.
-4. Everyone clicks **Open draft**. The host's button prepares the draft; if preparation hasn't started, use **Prepare draft** inside the draft screen.
-5. The host chooses the draft settings, waits for all players to connect to the draft, then clicks **Start drafting**. Allow the initial two-second connection check to finish.
+4. Everyone clicks **Open draft**. The host chooses the draft settings, then clicks **Check players**.
+5. Wait for **Ready to draft**, then click **Start draft**. The button enables once every player is connected and the initial two-second routing check has finished. **Recheck connections** restarts the check if needed.
 6. Pick your Jokers and confirm. Hover cards to read them, and use the team tray to keep track of your roster.
-7. If **Open deck lists** was enabled, click **Review all rosters** after drafting to browse everyone's picks. Return to the lobby when you're ready. Guests ready up, and the host clicks **Start Game**.
+7. With **Reveal rosters after draft** enabled (the default), click **Review all rosters** after drafting to browse everyone's picks. Return to the lobby when you're ready. Guests ready up, and the host clicks **Start Game**.
 
 **F8** still opens the draft screen. A completed draft is kept if the host changes the deck or balance before starting the match. **Restart draft** starts over, so don't use it just to review your roster.
 
@@ -61,7 +80,7 @@ The host can choose **1–4 packs**, **1 or 2 picks per turn**, and a pick timer
 
 The default timer is **Scaling: 5s per Joker**: a nine-Joker pack starts at 45 seconds, then the timer shortens as the pack empties. Existing saved timer choices are kept; select Scaling in setup if your old setting was Off.
 
-**Open deck lists** is an optional host setting, off by default. Turn it on before starting the draft to let everyone browse the completed rosters before the match. Picks stay private while drafting. After the last pick, **Review all rosters** lets you switch players and pages and hover Jokers for descriptions. The option also works in Local development draft.
+**Reveal rosters after draft** (open deck lists) is on by default. Everyone can browse completed rosters before the match. Turn it off before drafting for private rosters. Upgrading enables this once for future drafts; subsequent choices are saved. Picks stay private while drafting. After the last pick, **Review all rosters** lets you switch players and pages and hover Jokers for descriptions. The option also works in Local development draft.
 
 ## How the match works
 
@@ -158,3 +177,9 @@ The public name, install folder, manifest filename, and module folder are **Burg
 Use **Draft pool** in draft setup to choose Default or a custom JSON file in `Burglar/cubes`. Only the online host needs the file. See [the cube guide](cubes/README.md) and the included example. Smaller pools need fewer packs; excluded or unavailable Jokers are rejected; repeat a Joker ID to include multiple copies.
 
 Selecting another Joker now replaces an existing selection without a separate deselect click. In pick-two mode, it replaces the oldest selected Joker. Confirm selection still locks in the pick.
+
+## Score display in 0.26.4
+
+FFA averages display as rounded whole numbers with commas (for example, `12,346`). Values above 100,000,000 use scientific notation with up to two decimal places (for example, `1.23e9`). This is display formatting only: exact averages still decide life losses, and final-two 1v1 rules are unchanged. A rounded displayed average is not an exact cutoff.
+
+The host can choose **Open draft → Random deck** before drafting or after the draft finishes. Every player sees the same animated wheel and selected deck. All players must use this release to see the animation. Native deck selection remains available.

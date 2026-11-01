@@ -11,9 +11,8 @@ return {
     armed_seat = false,
     native_draft = true,
     pick_seconds = 'scaling',
-    open_deck_lists = false,
+    open_deck_lists = true,
     pack_effects = true,
     timer_alerts = true,
     diagnostics = false,
-    spectator_enabled = true, -- Experimental delayed read-only board viewer.
 }

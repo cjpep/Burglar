@@ -69,6 +69,23 @@ local function display(total,n)
     end
     return string.format('%.6g',mantissa)..'e'..exponent
 end
+-- Presentation only. The referee continues to compare exact score components.
+function A.format_average(raw)
+    local mantissa, exponent = tostring(raw):lower():match('^([%d.]+)e([+-]?%d+)$')
+    local value = tonumber(mantissa or raw) or 0
+    exponent = tonumber(exponent) or 0
+    if value <= 0 then return '0' end
+    while value >= 10 do value=value/10; exponent=exponent+1 end
+    while value < 1 do value=value*10; exponent=exponent-1 end
+    if exponent > 8 or (exponent == 8 and value > 1) then
+        local rounded=math.floor(value*100+0.5)/100
+        if rounded>=10 then rounded=1;exponent=exponent+1 end
+        local text=string.format('%.2f',rounded):gsub('0+$',''):gsub('%.$','')
+        return text..'e'..exponent
+    end
+    local digits=string.format('%.0f',math.floor(value*10^exponent+0.5))
+    return (digits:reverse():gsub('(%d%d%d)','%1,'):reverse():gsub('^,',''))
+end
 function A.rank(players)
     local parsed,total,ranked={},{},{}
     for _,p in ipairs(players) do

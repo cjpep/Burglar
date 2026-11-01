@@ -1,0 +1,2 @@
+Burglar — Standard (spectator code excluded)
+Install only one edition. Everyone should use the same edition and version.

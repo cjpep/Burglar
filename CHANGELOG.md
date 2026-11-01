@@ -1,3 +1,46 @@
+# Burglar changelog
+
+## 0.26.5
+
+- Fixed the deck wheel confirming a spin too early when it picks the deck already selected. It now waits for the server to echo that specific roll ID.
+- Fixed swallowed mouse, keyboard, and controller releases when an input was held before the wheel opened. Inputs used only for the overlay, including dismissal clicks, remain blocked from the lobby underneath.
+- Includes all 0.26.4 changes: the 126-copy / 63-unique "Don't Worry Chat, We're Scaling" cube and Asteroid exclusion from Burglar consumable pools on Balanced and rulesets using its layer. Other balance changes remain active. Already-owned Asteroids are not deleted.
+- Removed the example cube. Existing selections of that file fall back to Default; completed drafts and saved run rosters are retained.
+- Keeps the deck wheel, updated icon, Fantom_Balatro's cubes, and previous gameplay fixes. Standard edition only, without spectating.
+
+Validation: 19 focused Lua/API simulation scenarios passed, including all 15 deck outcomes across four simulated clients, delayed metadata, duplicate clicks, matching-roll acknowledgement, input-release handling, and dismissal click-through prevention. Native rendering, the real Balatro controller, and live-server multiplayer were not playtested. Package contents and cube counts were checked.
+
+# Burglar 0.26.3 — Shared deck wheel and new icon
+
+## 0.26.4
+
+- Added the 126-copy "Don't Worry Chat, We're Scaling" custom cube (63 unique Jokers).
+- Includes Burglar; removes Space Joker, Gros Michel, Popcorn, and Diet Cola from this cube.
+- Excludes Asteroids from normal consumable pools in Burglar runs using the Balanced layer, while keeping the other balance changes. Saved runs retain the ban. Does not alter non-Burglar matches or remove already-owned Asteroids.
+- Retains the host's random deck wheel, updated package icon, and previous fixes.
+- Standard edition only; spectator code remains excluded.
+
+Validation: cube JSON/key/count and archive consistency checks only. No automated gameplay tests or multiplayer playtest for this release.
+
+- Added the host-only Random deck button and shared arcade wheel, including shuffled deck positions, visual polish, and final-highlight alignment fix.
+- Uses the supplied Burglar artwork as the Thunderstore icon.
+- Includes all 0.26.2 changes: FFA average formatting, open rosters by default, clearer host setup, and empty opponent-row fix.
+- Standard excludes the experimental spectator feature; Spectator includes it. Install only one edition.
+
+Packaging checks only; gameplay tests were skipped as requested.
+
+# Burglar 0.26.2 — Draft setup and score display
+
+- Excluded the optional random-deck wheel and arcade presentation; native deck selection remains.
+- Kept the empty-opponent-row fix: PvP's opponent Joker and consumable slots are hidden only while empty during Burglar runs. Actual opponent cards still display normally.
+- FFA averages now display rounded whole numbers with comma separators. Above 100 million, they use scientific notation with up to two decimal places. Exact life-loss calculations and native final-two 1v1 scoring are unchanged.
+- Open deck lists default to on, including a one-time upgrade migration for future drafts. Renamed the control to "Reveal rosters after draft". Existing drafts retain their saved visibility, and later preference changes are preserved.
+- Host setup now shows clear settings / connection-check / completed-draft stages. Opening the draft screen no longer starts the connection check before the host chooses settings.
+- "Start draft" enables only after all player handshakes and the routing check finish. Recovery, restart, and roster-tool buttons have clearer labels.
+- Includes earlier 0.26.1 fixes, three-player FFA, independent tournament semifinals, optional stake modifiers, and Fantom_Balatro's custom cubes.
+
+Install only one edition; all players should update and start a fresh draft. Replace the entire previous Burglar folder. No gameplay or automated gameplay tests were run for this release, as requested. Packaging checks only.
+
 # Burglar 0.26.1 — Three-player FFA
 
 - FFA now supports two, three, or four players, including online drafts and the local development draft.
