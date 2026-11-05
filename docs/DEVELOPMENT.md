@@ -1,4 +1,4 @@
-> Current release: 0.26.1. See RELEASING.md for the two editions and RELEASE_VALIDATION.md for the packaging checks. SPECTATOR_PROTOTYPE.md documents the experimental viewer.
+> Current release: 0.26.6 Standard. See RELEASING.md and the root RELEASE_NOTES.md. Spectator documentation below is historical; the feature is not loaded or shipped in player packages.
 
 # Development and release checks
 
@@ -17,8 +17,14 @@ python tests/run.py
 python -m unittest discover -s tests -p '*_spec.py'
 ```
 
-The Python integration tests use separately obtained reference sources. Keep
-these directories beside the extracted `Burglar-source` directory:
+For Multiplayer 1.0.5 integration checks, point these environment variables to the extracted mod directories (each containing core.lua):
+
+- `DRAFTOUT_API_REFERENCE`: MultiplayerAPI 1.0.5 directory
+- `DRAFTOUT_PVP_REFERENCE`: MultiplayerPvP 1.0.5 directory
+
+The focused release checks are `mpapi_spec.py`, `compat105_spec.py`, `roster_duel_spec.py`, `native_picker_spec.py`, `rarity_tags_native_spec.py`, and `packaging_spec.py`. Historical suites may depend on older APIs or inactive spectator modules. The two legacy custom-picker cases are intentionally skipped in favor of native_picker_spec.
+
+Older tests use these reference defaults beside `Burglar-source`:
 
 - `reference_mp_100/BalatroMultiplayer-MultiplayerAPI-1.0.0`
 - `reference_mp_100/BalatroMultiplayer-MultiplayerPvP-1.0.0`
@@ -56,8 +62,7 @@ metadata. The guest acknowledges that exact token before the host starts.
 `Game.start_run` still copies an availability pool into the new run. Saved-roster
 matches use native PvP's referee and never activate the average-scoring adapter.
 The host enforces four starting lives; new match/lobby consent is required after
-completion, departure or host change. There is no automatic bracket scheduling,
-spectating, cross-process match recovery or signed tournament roster enforcement.
+completion, departure or host change. This describes the original 0.19.0 roster-duel layer; the later tournament module coordinates rooms around it. Spectating and signed tournament roster enforcement are not included in the current Standard package.
 
 `diagnostics.lua` is optional, local and bounded: 256 recent event lines, 256
 pending disk lines, one-second flush cadence, current/previous files of at most

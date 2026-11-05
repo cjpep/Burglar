@@ -1,0 +1,12 @@
+{
+  "name": "Burglar",
+  "version_number": "0.26.6",
+  "website_url": "https://github.com/cjpep/Burglar",
+  "description": "Draft Jokers, pass packs, and build your own shop pool. A two- to four-player Balatro mode inspired by Magic: The Gathering drafts. Standard edition, without spectating.",
+  "dependencies": [
+    "Thunderstore-lovely-0.10.0",
+    "Steamodded-Steamodded-26.1002.0",
+    "BalatroMultiplayer-MultiplayerAPI-1.0.5",
+    "BalatroMultiplayer-MultiplayerPvP-1.0.5"
+  ]
+}

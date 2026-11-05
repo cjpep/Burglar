@@ -1,40 +1,30 @@
-# Uploading Burglar to GitHub
+# Releasing Burglar 0.26.6
 
-## Repository files
+## Update GitHub source
 
-1. Extract **Burglar_v0.26.1_GitHub_Source.zip**.
-2. Open **Burglar-source** and upload its **contents** to your repository's root. Don't upload the ZIP as source or create another Burglar-source folder inside the repository.
-3. The top level should show `README.md`, `Burglar.json`, `main.lua`, `config.lua`, `LICENSE`, and the `burglar`, `assets`, `docs`, `tests`, and `tools` folders.
-4. If updating the old repository, delete its old `Draftout.json` and `draftout` module directory. Uploading new files doesn't automatically remove them. Keep one manifest and one entry point.
-5. Commit with a message such as **Package Burglar 0.26.1 in Standard and Spectator editions**. For a repository you maintain yourself, committing directly to main is fine.
+1. Extract `Burglar_v0.26.6_GitHub_Source.zip`.
+2. Open `Burglar-source`. Upload its contents to the repository root. Do not upload the ZIP as source or create a nested Burglar-source folder.
+3. Delete `cubes/example_pool.json` from GitHub if it remains there. Web uploads replace and add files, but do not delete missing files.
+4. Commit as `Burglar 0.26.6: Multiplayer 1.0.5 compatibility`.
 
-The README is the GitHub description and play guide. Suggested short repository description:
+The stable internal ID remains Draftout for saved data and network compatibility. The visible mod name is Burglar. Historical spectator source and notes remain in the developer archive, but main.lua does not load them and the builder excludes them from installable packages.
 
-> A two- to four-player Balatro Joker draft inspired by Magic: The Gathering. Draft your roster, build your shop pool, and outlast your friends.
+## Publish GitHub release
 
-## Release downloads
+Create a release using tag `v0.26.6` and title `Burglar 0.26.6`. Paste the changelog bullets from the root `RELEASE_NOTES.md`. Attach `Burglar_v0.26.6_Standard.zip` as the player download. You may also attach the source and Thunderstore ZIPs if desired. This release was simulated, not live playtested; retain a pre-release label if that matches your rollout.
 
-Create a release tagged **v0.26.1**, titled **Burglar 0.26.1**. Attach:
+## Update Thunderstore
 
-- `Burglar_v0.26.1_Standard.zip`
-- `Burglar_v0.26.1_Spectator.zip`
+Under the existing **cj** team, upload `Burglar_v0.26.6_Standard_Thunderstore.zip` unchanged. Its manifest name remains `Burglar`, so version 0.26.6 updates the existing package. Do not re-enable or upload the deprecated spectator edition. The package includes manifest.json, icon.png, README.md and CHANGELOG.md at the ZIP root, with the playable mod in Burglar/.
 
-Use `docs/RELEASE_NOTES.md` for the description. Mark it as a pre-release if you want to retain that label while multiplayer playtesting continues. The Spectator edition remains experimental regardless of the release label.
+Dependencies are listed for MultiplayerAPI/PvP 1.0.5, Lovely 0.10.0 and Steamodded 26.1002.0. The multiplayer packages must be published on Thunderstore for dependency validation to accept them.
 
-GitHub also offers automatic source archives. Those contain the source edition with spectator code, so direct players to the named Standard/Spectator ZIP assets. Don't overwrite the repository source with the Standard player files; the builder creates both editions from one codebase.
+## Rebuild
 
-Bookmark your repository's Releases page for easy access to both downloads.
-
-## Build future releases
-
-Update the code, version in `Burglar.json`, and release documents. Run:
+Update `Burglar.json`, `manifest.json`, and the release documents together, then run:
 
 ```sh
-python tools/build_release.py
+python tools/build_release.py --output dist
 ```
 
-Python 3.10+ is needed; no third-party packages are required for packaging. Output goes to `../dist`; use `--output PATH` to choose another folder.
-
-The builder checks runtime file references, removes spectator modules and entry points from Standard, includes artwork/font licenses, and adds a SHA-256 inventory. Player ZIPs exclude tests, developer notes, caches, logs, dependency sources, and local saves.
-
-Both editions retain the same internal mod ID and prefix for save/protocol compatibility. Install only one.
+The builder requires Python 3.10+ and no extra packages. It checks matching versions/dependencies, module references, the 256x256 PNG icon, assets, and Standard-only runtime contents. It creates three deterministic ZIPs, each with a CONTENTS.sha256 inventory. It does not bundle Balatro or the dependency mods.

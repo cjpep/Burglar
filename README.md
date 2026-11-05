@@ -1,12 +1,11 @@
 # Burglar
 
-## Latest release: 0.26.5
+## Latest release: 0.26.6
 
-The host deck wheel now waits for its specific server confirmation and preserves
-input releases without letting dismissal clicks reach the lobby underneath.
-This Standard release includes the scaling cube and Balanced Asteroid exclusion
-from 0.26.4. The example cube has been removed; old selections fall back to Default.
-Everyone should update to the same version. Replace the entire Burglar folder.
+Compatibility release for **MultiplayerAPI 1.0.5 and MultiplayerPvP 1.0.5**.
+Keeps the shared deck wheel, custom cubes, Balanced Asteroid exclusion, and
+existing draft and scoring rules. Standard edition only; the experimental
+Spectator edition is deprecated. Everyone should update before starting a new match.
 
 ## New in 0.26.4
 
@@ -31,19 +30,17 @@ Made by **Cjpep**, based on **Fantom_Balatro's original idea**. A lot of the cha
 
 Get a player ZIP from this repository's **Releases** page:
 
-| Edition | What you get |
-| --- | --- |
-| **Burglar v0.26.5 — Standard** | The complete draft and multiplayer mode, with spectator code removed. Start here if you don't need spectating. |
-| **Burglar v0.26.5 — Spectator** | The same game, plus an experimental delayed view of surviving players after you're eliminated. |
-
-Install **one edition only**. Everyone in the lobby should use the same version and edition. Switch editions between matches by replacing the entire Burglar folder. The GitHub source includes spectating; use a release download for Standard.
+Download **Burglar v0.26.6 Standard** from Releases, or update **cj-Burglar**
+in your mod manager. This release does not contain the spectator feature.
+Replace the entire Burglar folder. Everyone in a lobby must use the same version.
+The GitHub source ZIP is for updating the repository; install the Standard ZIP to play.
 
 ## What you need
 
 - Balatro. The development baseline is **1.0.1o** on Windows.
 - **Steamodded 1.0.0-beta-1814a or later**.
-- **Lovely 0.10.0 or later**. Multiplayer 1.0.4 requires this newer minimum.
-- **MultiplayerAPI** and **MultiplayerPvP**, both **1.0.4 or later**. This release was checked against 1.0.4; later releases may need another compatibility review.
+- **Lovely 0.10.0 or later**. Multiplayer 1.0.5 requires this newer minimum.
+- **MultiplayerAPI** and **MultiplayerPvP**, both **1.0.5 or later**. This release was checked against 1.0.5; later releases may need another compatibility review.
 
 MultiplayerSpeedrunning is optional. Remove the old Multiplayer and MultiplayerExperimental mods from active Mods. These downloads don't include Balatro, Lovely DLLs, or the multiplayer dependencies.
 
@@ -113,16 +110,6 @@ Getting a Joker through Wraith, The Soul, or the Jimbo fallback doesn't add it t
 Open **Mods → Burglar → Config → Local development draft**. Choose two, three, or four seats and start a draft. You control each seat in turn, so you can try the picks, pack passing, timers, and roster controls without getting a group together.
 
 Afterward, you can assign a seat's pool to a **new normal run outside multiplayer lobbies**. Use **Disarm future runs** when you're finished testing so future solo runs return to normal. This mode doesn't test online connections or multiplayer scoring.
-
-## Spectating — Spectator edition only
-
-After losing all your lives in a three- or four-player match, **stay in the lobby** and click **Watch remaining players** on the results screen. **F9** is also a shortcut. Choose a survivor with the Previous/Next controls.
-
-The feed starts at a shop or blind-selection checkpoint and uses a delay of at least five seconds. It shows the watched player's board, hand, shop offers, packs, and changing card areas. Survivors don't have to press anything.
-
-This is a reconstructed view from game snapshots, not a screen share or full replay. Some quick actions and animations may not appear. It is still experimental. Two-player matches end when someone is eliminated, so there's nobody left to spectate. The viewer doesn't support saved-roster bracket matches.
-
-For a scripted preview: **Mods → Burglar → Config → Local spectator preview**. It demonstrates the layout, not a live connection.
 
 ## Lobby tournament (four players)
 

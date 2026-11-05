@@ -1,5 +1,15 @@
 # Burglar changelog
 
+## 0.26.6 — Multiplayer 1.0.5 compatibility
+
+- Updated the mod and Thunderstore dependencies to MultiplayerAPI 1.0.5 and MultiplayerPvP 1.0.5.
+- Verified the existing integration against the new native startup, readiness acknowledgement, result handling, and host takeover paths. No changes to Burglar's draft or scoring rules were needed.
+- Keeps the host's shared random deck wheel, current icon, Fantom_Balatro's custom cubes, the scaling cube, and the Balanced Asteroid exclusion.
+- Updated the release builder to produce matching Standard player and Thunderstore packages plus a separate GitHub source archive. Spectator remains deprecated and is excluded from the installable packages.
+- Removed the obsolete example cube from the repository source, matching the previous player release. Updated the install and release instructions.
+
+Validation: 104 Python test cases passed; two obsolete custom-picker cases were skipped because the native-picker suite covers their replacement. Tests use the supplied 1.0.5 API/PvP code with a simulated relay and game environment. Coverage includes 2/3/4-player startup, Cocktail recipe propagation, a 24-round FFA-to-1v1 match, repeated/stale reports, host departure, independent semifinal rooms, fresh finals retaining only drafted rosters, native deck/stake/balance changes, Balanced rarity tags and duplicate copy limits, and package integrity. Runtime Lua syntax also checked with Lua 5.1. Native rendering, Steam authentication, automatic tournament room handoffs on the real server, and live multiplayer were not playtested.
+
 ## 0.26.5
 
 - Fixed the deck wheel confirming a spin too early when it picks the deck already selected. It now waits for the server to echo that specific roll ID.

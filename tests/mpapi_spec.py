@@ -37,6 +37,7 @@ class Client:
         g = self.lua.globals()
         g.checkpoints_enabled=bus.checkpoints
         g.native_outcomes=bus.native_outcomes
+        g.native_startup=bus.native_startup
         g.player_count=bus.player_count
         g.python_json_encode=lambda value: json.dumps(plain(value),sort_keys=True)
         g.root, g.api_root, g.pvp_root, g.own_id = str(ROOT), str(API), str(PVP), f'p{index}'
@@ -47,6 +48,7 @@ class Client:
             G={FUNCS={}, UIT={C=1}, TIMERS={REAL=0}, P_CENTERS={},C={MULTIPLAYER={}}}
             G.FUNCS.exit_overlay_menu=function() G.OVERLAY_MENU=nil end
             Game={update=function() end,TIMERS=G.TIMERS}
+            CardArea={draw=function() end}
             SMODS={current_mod={id='MultiplayerAPI'},save_mod_config=function() config_saves=(config_saves or 0)+1 end,
                 load_file=function(path) return loadfile(root..'/'..path) end}
             -- Minimal SMODS object machinery; API ActionType itself is real code.
@@ -69,6 +71,7 @@ class Client:
             MPAPI.get_current_lobby=function() return current end
             MPAPI.sendWarnMessage=function(msg) warnings[#warnings+1]=msg end
             MPAPI.sendDebugMessage=function() end
+            MPAPI.match_log=function() end
             MPAPI.make_error=function(kind,message) return {kind=kind,message=message} end
             MPAPI.json_encode=function(value) return python_json_encode(value) end
             MPAPI.generate_id=function() uid=uid+1; return own_id..':'..uid end
@@ -88,6 +91,7 @@ class Client:
             MPAPI.load_mpapi_file('api/action/builtin.lua')
             PVP={id='MultiplayerPvP',LOBBY={deck={stake=1},config={}},
                 GamemodeKey={PVP_NEMESIS='pvp_nemesis'},UI={UTILS={overlay_message=function() end}}}
+            PVP.match_log=function() end
             SMODS.current_mod=PVP
         ''')
         source = (PVP/'pvp_api/flow.lua').read_text()
@@ -141,7 +145,7 @@ class Client:
                     assert(loadfile(pvp_root..'/pvp_api/round_sync.lua'))()
                     sendDebugMessage=function() end;sendWarnMessage=function() end
                 end
-                for _,path in ipairs({'lib/pending_death.lua','pvp_api/server_hold.lua','lib/ante_nemesis.lua','ui/game/pending_death.lua'}) do
+                for _,path in ipairs({'lib/ready_check.lua','lib/pending_death.lua','pvp_api/server_hold.lua','lib/ante_nemesis.lua','ui/game/pending_death.lua'}) do
                     local f=loadfile(pvp_root..'/'..path);if f then f() end
                 end
                 assert(loadfile(pvp_root..'/pvp_api/referee.lua'))()
@@ -243,6 +247,7 @@ class Client:
                 end
                 PVP.current_ruleset=function() return {} end; PVP.UI.restore_timer=function() end
                 Client={};assert(loadfile(pvp_root..'/pvp_api/net.lua'))()
+                local policy=loadfile(pvp_root..'/lib/matchmaking_policy.lua');if policy then policy() end
                 assert(loadstring(pvp_start_source))()
                 local original=PVP.pvp_start_match
                 PVP.pvp_start_match=function(...) original_starts=original_starts+1; return original(...) end
@@ -250,6 +255,28 @@ class Client:
                     game_starts=game_starts+1; run_seed=params.seed; run_back=PVP.LOBBY.deck.back; PVP.GAME.eliminated=nil
                     if current.is_host then PVP.referee_reset(PVP.LOBBY.config.starting_lives) end
                     run_pool=D.mpbridge.prepare_run()
+                end
+                if native_startup then
+                    -- Actual 1.0.5 startup/ready actions; only game rendering and
+                    -- the host's Cocktail settings are simulated here.
+                    PVP._pvp_kind='private'
+                    MPAPI.has_server_referee=function() return true end
+                    PVP.roll_cocktail_recipe=function() return test_recipe end
+                    local file=assert(io.open(pvp_root..'/objects/decks/ZZ_cocktail.lua'))
+                    local source=file:read('*a');file:close()
+                    assert(loadstring(assert(source:match('(function PVP.receive_cocktail_recipe%(recipe%).-\\nend)'))))()
+                    assert(loadfile(pvp_root..'/pvp_api/setup.lua'))()
+                    assert(loadfile(pvp_root..'/pvp_api/actions/run_lifecycle.lua'))()
+                    local dispatch=PVP.dispatch_action
+                    PVP.dispatch_action=function(kind,params)
+                        if kind=='startGame' then
+                            game_starts=game_starts+1;run_seed=params.seed;run_back=PVP.LOBBY.deck.back
+                            PVP.GAME.eliminated=nil;run_pool=D.mpbridge.prepare_run()
+                        elseif kind=='startBlind' then
+                            PVP.GAME.ready_blind=false;G.STATE=G.STATES.SELECTING_HAND
+                        end
+                        return dispatch(kind,params)
+                    end
                 end
             end)
             local core=assert(loadfile(root..'/burglar/core.lua'))()
@@ -304,10 +331,11 @@ class Client:
 
 
 class Bus:
-    def __init__(self, broadcast=False, checkpoints=False,native_outcomes=False,player_count=4):
+    def __init__(self, broadcast=False, checkpoints=False,native_outcomes=False,player_count=4,native_startup=False):
         self.player_count=player_count
         self.checkpoints=checkpoints
         self.native_outcomes=native_outcomes
+        self.native_startup=native_startup
         self.drop=None; self.dropped=[]; self.metadata=[]
         self.queue, self.broadcast, self.views, self.starts = [], broadcast, [], []
         self.offline=set();self.host_index=0
@@ -812,7 +840,8 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(guest.value('ui_shows'),1)
         self.assertIsNone(guest.value('B.session'))
         host.run('G.FUNCS.draftout_lobby_draft()');bus.flush()
-        self.assertEqual(host.value('B.phase'),'checking')
+        self.assertEqual(host.value('B.phase'),'idle')  # Open draft shows setup; Check players prepares it.
+        self.assertIsNone(host.value('B.session'))
         bus.draft();session=host.value('B.session')
         for c in bus.clients:c.run('G.FUNCS.draftout_lobby_draft()')
         self.assertEqual(host.value('B.session'),session)

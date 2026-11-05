@@ -787,6 +787,8 @@ G.FUNCS.draftout_recap_tab({config={ref_table=4}})
 check(D.recap.tab==3,'No phantom fourth recap tab')
 G.FUNCS.draftout_recap_close()
 D.local_launcher=true;G.FUNCS.draftout_players_cycle()
+check(D.draft_options().player_count==3,'Local testing supports three seats')
+G.FUNCS.draftout_players_cycle()
 check(D.draft_options().player_count==4,'Local testing can switch back to four seats')
 local legacy=D.start('LEGACY-FOUR');legacy.player_count=nil
 check(D.core.player_count(legacy)==4 and D.core.token(legacy,4).pack_id=='r1s4',
