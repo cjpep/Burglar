@@ -1,6 +1,6 @@
-# Installing Burglar 0.26.6
+# Installing Burglar 0.26.7
 
-This release is **Standard** (no spectator code). Everyone should use version 0.26.6 Standard.
+This release is **Standard** (no spectator code). Everyone should use version 0.26.7 Standard.
 
 1. Close Balatro.
 2. Open `%AppData%\Balatro\Mods` using Win + R.

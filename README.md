@@ -1,8 +1,8 @@
 # Burglar
 
-## Latest release: 0.26.6
+## Latest release: 0.26.7
 
-Compatibility release for **MultiplayerAPI 1.0.5 and MultiplayerPvP 1.0.5**.
+Fixes drafted Hanging Chad and Bloodstone disappearing from Balanced shops. Requires **MultiplayerAPI 1.0.5 and MultiplayerPvP 1.0.5**.
 Keeps the shared deck wheel, custom cubes, Balanced Asteroid exclusion, and
 existing draft and scoring rules. Standard edition only; the experimental
 Spectator edition is deprecated. Everyone should update before starting a new match.
@@ -30,7 +30,7 @@ Made by **Cjpep**, based on **Fantom_Balatro's original idea**. A lot of the cha
 
 Get a player ZIP from this repository's **Releases** page:
 
-Download **Burglar v0.26.6 Standard** from Releases, or update **cj-Burglar**
+Download **Burglar v0.26.7 Standard** from Releases, or update **cj-Burglar**
 in your mod manager. This release does not contain the spectator feature.
 Replace the entire Burglar folder. Everyone in a lobby must use the same version.
 The GitHub source ZIP is for updating the repository; install the Standard ZIP to play.

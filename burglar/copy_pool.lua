@@ -5,11 +5,11 @@ return function(D)
     local function key(card) return card.config and card.config.center and card.config.center.key end
     function C.counts(pool)
         local limits,used,seen={},{},{}
-        for _,id in ipairs(pool.keys) do local k=D.core.key(id);limits[k]=(limits[k] or 0)+1 end
+        for _,id in ipairs(pool.keys) do local k=D.offer_key(D.core.key(id));limits[k]=(limits[k] or 0)+1 end
         local function take(card)
             if not seen[card] and not card.removed and not card.REMOVED then
                 seen[card]=true;local k=key(card)
-                if k then used[k]=(used[k] or 0)+1 end
+                if k then k=D.offer_key(k);used[k]=(used[k] or 0)+1 end
             end
         end
         for _,name in ipairs({'jokers','shop_jokers','pack_cards'}) do

@@ -178,6 +178,22 @@ local function has_key(keys, key)
     return false
 end
 
+-- Rosters, cube copy IDs and network messages keep their stable vanilla keys.
+-- Translate only at offer time, and only for an actual silent PvP replacement.
+local pvp_replacement={j_hanging_chad='j_mp_hanging_chad',j_bloodstone='j_mp_bloodstone'}
+function D.offer_key(key)
+    local alias=pvp_replacement[key]
+    local bans=G.GAME.banned_keys
+    if not alias or not bans or not bans[key] or bans[alias] then return key end
+    local info=MPAPI and MPAPI.get_ban_info and MPAPI.get_ban_info(key)
+    if not info or info.category~='silent' then return key end
+    local center=G.P_CENTERS[alias]
+    local rules=PVP and PVP.current_ruleset and PVP.current_ruleset()
+    if center and center.set=='Joker' and rules and has_key(rules.reworked_jokers or {},alias)
+        and not MPAPI.should_exclude_from_pool(center) then return alias end
+    return key
+end
+
 local function drafted_joker_available(game,key)
     return not (game.banned_keys or {})[key]
         and key~='j_ring_master'
@@ -189,7 +205,7 @@ D.copy_pool=copies
 local function pool_candidates(pool)
     local keys,seen={},{}
     for _,id in ipairs(pool.keys) do
-        local key=core.key(id)
+        local key=D.offer_key(core.key(id))
         if not seen[key] then keys[#keys+1]=key;seen[key]=true end
     end
     local limits,used
@@ -202,6 +218,7 @@ local function pool_candidates(pool)
 end
 function D.shop_key(pool, forced_key, rarity, strict_rarity)
     local game=G.GAME
+    if forced_key then forced_key=D.offer_key(forced_key) end
     local keys,available=pool_candidates(pool)
     local function eligible(key)
         return available(key) and (pool.copy_limits or not (game.used_jokers or {})[key] or SMODS.showman(key))
@@ -230,9 +247,10 @@ end
 function D.common_keys(pool)
     local keys = {}
     for _, key in ipairs(pool.keys) do
-        local c = G.P_CENTERS[core.key(key)]
+        local offer = D.offer_key(core.key(key))
+        local c = G.P_CENTERS[offer]
         if c and (c.rarity == 1 or c.rarity == "Common")
-            and drafted_joker_available(G.GAME,core.key(key)) then keys[#keys + 1] = key end
+            and drafted_joker_available(G.GAME,offer) then keys[#keys + 1] = key end
     end
     return keys
 end

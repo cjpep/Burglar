@@ -1,5 +1,10 @@
 # Burglar changelog
 
+## 0.26.7 — Drafted Hanging Chad and Bloodstone in Balanced
+
+- Burglar now offers the Multiplayer PvP version of a drafted Hanging Chad or Bloodstone when the active ruleset silently replaces the vanilla Joker. Previously neither version could appear in normal Balanced shops.
+- This also applies to drafted Buffoon Packs and eligible Joker generators. True bans and custom cube copy limits still apply. Vanilla shops keep their original Joker IDs and odds.
+
 ## 0.26.6 — Multiplayer 1.0.5 compatibility
 
 - Updated the mod and Thunderstore dependencies to MultiplayerAPI 1.0.5 and MultiplayerPvP 1.0.5.
